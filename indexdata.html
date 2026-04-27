@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediCore AI — Hospital Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a1628;--navy2:#0f2040;--teal:#00bfa5;--teal2:#00e5cc;
+  --blue:#1565c0;--blue2:#1e88e5;--red:#e53935;--amber:#f9a825;
+  --green:#2e7d32;--green2:#43a047;--surface:#ffffff;--surface2:#f0f4f8;
+  --surface3:#e8edf3;--text1:#0a1628;--text2:#3d5170;--text3:#6b7fa3;
+  --border:#d0dae8;--radius:10px;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;background:var(--surface2)}
+.platform{display:flex;flex-direction:column;height:100vh}
+.topbar{background:var(--navy);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-family:'Sora',sans-serif;font-weight:700;font-size:20px;color:#fff;letter-spacing:-0.5px}
+.logo span{color:#00e5cc}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.badge{background:rgba(0,229,204,0.15);border:1px solid rgba(0,229,204,0.4);color:#00e5cc;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.dot-live{width:7px;height:7px;background:#00e5cc;border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.topnav{display:flex;gap:2px}
+.topnav button{background:none;border:none;color:rgba(255,255,255,0.55);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.topnav button.active,.topnav button:hover{background:rgba(255,255,255,0.1);color:#fff}
+.layout{display:grid;grid-template-columns:220px 1fr;flex:1;overflow:hidden}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;overflow-y:auto}
+.sidebar-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 16px;margin:16px 0 6px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;font-size:13.5px;color:var(--text2);border-left:3px solid transparent}
+.sidebar-item:hover{background:var(--surface2);color:var(--text1)}
+.sidebar-item.active{background:#e8f5fd;color:var(--blue2);border-left-color:var(--blue2);font-weight:500}
+.icon{width:18px;text-align:center;flex-shrink:0}
+.cnt{margin-left:auto;background:var(--blue2);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px}
+.cnt.red{background:var(--red)}.cnt.amber{background:var(--amber)}
+.main{overflow-y:auto;padding:24px;background:var(--surface2)}
+.page{display:none}.page.active{display:block}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.page-title{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--text1)}
+.page-sub{font-size:13px;color:var(--text3);margin-top:3px}
+.btn{background:var(--navy);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:9px 18px;border-radius:var(--radius);cursor:pointer;transition:all 0.2s}
+.btn:hover{background:var(--navy2)}.btn-teal{background:var(--teal)}.btn-teal:hover{background:#00a896}
+.btn:disabled{opacity:0.6;cursor:not-allowed}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.teal::before{background:var(--teal)}.stat-card.blue::before{background:var(--blue2)}
+.stat-card.red::before{background:var(--red)}.stat-card.green::before{background:var(--green2)}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-weight:500}
+.stat-value{font-family:'Sora',sans-serif;font-size:28px;font-weight:700;color:var(--text1);margin:4px 0}
+.stat-change{font-size:12px;color:var(--green2);font-weight:500}.stat-change.neg{color:var(--red)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+.card-title{font-size:14px;font-weight:600;color:var(--text1);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:22px}
+.patient-table{width:100%;border-collapse:collapse;font-size:13px}
+.patient-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);font-weight:500;padding:0 12px 10px;border-bottom:1px solid var(--border)}
+.patient-table td{padding:11px 12px;border-bottom:1px solid var(--surface2);color:var(--text2)}
+.patient-table tr:hover td{background:var(--surface2)}
+.status-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 10px;border-radius:20px}
+.status-badge.critical{background:#fce8e8;color:#b71c1c}.status-badge.stable{background:#e8f5e9;color:#2e7d32}
+.status-badge.waiting{background:#fff8e1;color:#f57f17}.status-badge.admitted{background:#e3f2fd;color:#1565c0}
+.status-badge.approved{background:#e8f5e9;color:#2e7d32}.status-badge.partial{background:#fff3e0;color:#e65100}
+.status-badge.pending{background:#e8eaf6;color:#3949ab}.status-badge.denied{background:#fce8e8;color:#b71c1c}
+.status-badge.fraud{background:#fce8e8;color:#b71c1c;font-weight:700}
+.input-row{margin-bottom:12px}
+.input-label{font-size:12px;color:var(--text3);font-weight:500;margin-bottom:5px}
+.inp{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text1);background:var(--surface);outline:none;transition:border 0.2s}
+.inp:focus{border-color:var(--blue2)}select.inp{cursor:pointer}textarea.inp{resize:none;min-height:70px}
+.queue-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--surface2);gap:12px}
+.queue-num{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.queue-num.urgent{background:var(--red)}
+.queue-name{font-size:13.5px;font-weight:500;color:var(--text1)}.queue-dept{font-size:11px;color:var(--text3)}
+.queue-wait{margin-left:auto;font-size:12px;color:var(--text3)}
+.alert-bar{background:#fff8e1;border:1px solid #ffe082;border-radius:var(--radius);padding:10px 14px;font-size:12.5px;color:#5d4037;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.alert-bar.urgent{background:#fce8e8;border-color:#ef9a9a;color:#b71c1c}
+.chat-container{height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:14px;background:var(--surface);margin-bottom:10px;scroll-behavior:smooth}
+.chat-msg{margin-bottom:12px;display:flex;flex-direction:column}
+.chat-msg.user{align-items:flex-end}
+.chat-bubble{max-width:82%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.55}
+.chat-msg.bot .chat-bubble{background:var(--surface2);color:var(--text1);border-bottom-left-radius:4px}
+.chat-msg.user .chat-bubble{background:var(--navy);color:#fff;border-bottom-right-radius:4px}
+.chat-meta{font-size:10px;color:var(--text3);margin-top:3px;padding:0 4px}
+.chat-input-row{display:flex;gap:8px}
+.section-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pill{font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);cursor:pointer}
+.pill:hover{background:var(--surface3)}
+.pill.teal{background:#e0f7fa;color:#006064;border-color:#80deea}
+.pagination{display:flex;align-items:center;gap:8px;margin-top:14px;justify-content:flex-end;flex-wrap:wrap}
+.page-btn{padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:12px;color:var(--text2)}
+.page-btn:hover,.page-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.bar-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-bg{flex:1;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.bar-fill{height:8px;border-radius:4px;transition:width 0.8s ease}
+.agent-card{border:1px solid var(--border);border-radius:var(--radius);padding:14px;background:var(--surface)}
+.agent-card.running{border-color:var(--teal);background:#e0f7fa}
+.agent-card.done{border-color:var(--green2);background:#e8f5e9}
+</style>
+</head>
+<body>
+<div class="platform">
+  <div class="topbar">
+    <div class="logo">Medi<span>Core</span> AI</div>
+    <div class="topnav">
+      <button class="active" onclick="showPage('dashboard')">Dashboard</button>
+      <button onclick="showPage('patients')">Patients</button>
+      <button onclick="showPage('agents')">AI Agents</button>
+      <button onclick="showPage('queue')">Queue</button>
+      <button onclick="showPage('claims')">Claims</button>
+      <button onclick="showPage('analytics')">Analytics</button>
+      <button onclick="showPage('assistant')">Assistant</button>
+    </div>
+    <div class="topbar-right">
+      <div class="badge"><span class="dot-live"></span>Live</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6)" id="topbar-date">City General Hospital</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-label">Overview</div>
+      <div class="sidebar-item active" onclick="nav(this,'dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="nav(this,'patients')"><span class="icon">🏥</span> Patients <span class="cnt">1200</span></div>
+      <div class="sidebar-label">AI Agents</div>
+      <div class="sidebar-item" onclick="nav(this,'agents')"><span class="icon">🤖</span> Run AI Agents</div>
+      <div class="sidebar-item" onclick="nav(this,'assistant')"><span class="icon">💬</span> AI Assistant</div>
+      <div class="sidebar-label">Operations</div>
+      <div class="sidebar-item" onclick="nav(this,'queue')"><span class="icon">📋</span> Queue Management <span class="cnt amber">8</span></div>
+      <div class="sidebar-item" onclick="nav(this,'claims')"><span class="icon">📄</span> Insurance Claims <span class="cnt red">51</span></div>
+      <div class="sidebar-label">Insights</div>
+      <div class="sidebar-item" onclick="nav(this,'analytics')"><span class="icon">📈</span> Analytics</div>
+      <div class="sidebar-label">Settings</div>
+      <div class="sidebar-item" onclick="nav(this,'settings')"><span class="icon">⚙️</span> API Configuration</div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div><div class="page-title">Overview</div><div class="page-sub" id="dash-date">Loading...</div></div>
+          <button class="btn btn-teal" onclick="showPage('agents')">▶ Run AI Agents</button>
+        </div>
+        <div class="alert-bar urgent">🚨 Fraud Alert: 51 flagged claims detected in dataset. AI confidence: 94%. Review Claims tab for details.</div>
+        <div class="stats-row">
+          <div class="stat-card teal"><div class="stat-label">Total Patients</div><div class="stat-value">1,200</div><div class="stat-change">↑ Kaggle dataset loaded</div></div>
+          <div class="stat-card blue"><div class="stat-label">Avg Hospital Stay</div><div class="stat-value">6.5d</div><div class="stat-change">Across all diagnoses</div></div>
+          <div class="stat-card red"><div class="stat-label">Fraud Flagged</div><div class="stat-value">51</div><div class="stat-change neg">AI-detected anomalies</div></div>
+          <div class="stat-card green"><div class="stat-label">Approval Rate</div><div class="stat-value">77.5%</div><div class="stat-change">₹109L approved</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-title">🧬 Diagnosis Distribution</div><div id="diag-bars"></div></div>
+          <div class="card"><div class="card-title">🔬 Procedure Breakdown</div><div id="proc-bars"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">👥 Recent Patients <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:8px">Latest 6 from dataset</span></div>
+          <table class="patient-table">
+            <thead><tr><th>Patient</th><th>ID</th><th>Age</th><th>Diagnosis</th><th>Procedure</th><th>Claim</th><th>Fraud</th><th>Action</th></tr></thead>
+            <tbody id="dash-recent"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PATIENTS -->
+      <div id="page-patients" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Patient Registry</div><div class="page-sub">1,200 patient records — Kaggle Healthcare Dataset</div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="inp" style="width:auto" id="filter-diag" onchange="filterPatients()">
+              <option value="">All Diagnoses</option>
+              <option>Asthma</option><option>Diabetes</option><option>Infection</option><option>Fever</option><option>Fracture</option>
+            </select>
+            <select class="inp" style="width:auto" id="filter-proc" onchange="filterPatients()">
+              <option value="">All Procedures</option>
+              <option>Consultation</option><option>Blood Test</option><option>Surgery</option><option>MRI</option><option>X-Ray</option>
+            </select>
+            <select class="inp" style="width:auto" id="filter-fraud" onchange="filterPatients()">
+              <option value="">All Records</option>
+              <option value="Yes">Fraud Only</option>
+              <option value="No">Clean Only</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="stat-card teal"><div class="stat-label">Showing</div><div class="stat-value" id="pt-showing">1200</div><div class="stat-change">of 1,200 total</div></div>
+          <div class="stat-card red"><div class="stat-label">Fraud Flagged</div><div class="stat-value">51</div><div class="stat-change neg">4.25% of records</div></div>
+          <div class="stat-card green"><div class="stat-label">Avg Claim</div><div class="stat-value">₹11,744</div><div class="stat-change">Per patient</div></div>
+        </div>
+        <div style="margin-bottom:10px">
+          <input class="inp" id="pt-search" placeholder="🔍 Search by name, ID, city, hospital..." oninput="filterPatients()" style="max-width:420px"/>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+          <table class="patient-table">
+            <thead><tr><th style="padding:12px">Name</th><th>ID</th><th>Age</th><th>City</th><th>Diagnosis</th><th>Procedure</th><th>Stay</th><th>Claim ₹</th><th>Approved ₹</th><th>Fraud</th><th>Action</th></tr></thead>
+            <tbody id="pt-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pt-pagination"></div>
+      </div>
+
+      <!-- AI AGENTS -->
+      <div id="page-agents" class="page">
+        <div class="page-header">
+          <div><div class="page-title">AI Agent Pipeline</div><div class="page-sub">5-agent clinical &amp; insurance decision engine —  Powered by Gemini AI</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">🩺 Patient Input</div>
+            <div class="input-row"><div class="input-label">Patient Name</div><input class="inp" id="ai-name" placeholder="e.g. Vasudha Dhar"/></div>
+            <div class="input-row"><div class="input-label">Diagnosis</div>
+              <select class="inp" id="ai-diagnosis" onchange="diagnosisChanged()">
+                <option value="">Select Diagnosis</option>
+                <option>Asthma</option><option>Diabetes</option><option>Infection</option><option>Fever</option><option>Fracture</option>
+              </select>
+            </div>
+            <div class="input-row"><div class="input-label">Symptoms</div><textarea class="inp" id="ai-symptoms" placeholder="Describe symptoms..."></textarea></div>
+            <div class="grid-2" style="margin-bottom:0;gap:10px">
+              <div class="input-row" style="margin:0"><div class="input-label">Procedure</div>
+                <select class="inp" id="ai-treatment"><option>Consultation</option><option>Blood Test</option><option>Surgery</option><option>MRI</option><option>X-Ray</option></select>
+              </div>
+              <div class="input-row" style="margin:0"><div class="input-label">Insurance Plan</div>
+                <select class="inp" id="ai-plan"><option>Premium</option><option>Standard</option><option>Basic</option></select>
+              </div>
+            </div>
+            <div class="input-row" style="margin-top:12px"><div class="input-label">Claim Amount (₹)</div><input class="inp" id="ai-cost" type="number" placeholder="e.g. 12000"/></div>
+            <button class="btn btn-teal" style="width:100%;margin-top:4px;padding:11px" onclick="runAgents()" id="run-btn">▶ Run All 5 AI Agents</button>
+            <div style="margin-top:12px">
+              <div class="section-title" style="margin-bottom:6px">🔗 Quick-load from Dataset</div>
+              <div id="quick-patients" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto"></div>
+            </div>
+            <div style="margin-top:10px;padding:10px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--text3)">
+              Pipeline: 1. Symptom Analysis → 2. Diagnostic Recommendation → 3. Treatment Evaluation → 4. Claim Decision → 5. Fraud Detection
+            </div>
+          </div>
+          <div class="card" id="agent-results">
+            <div class="section-title">Agent Output</div>
+            <div id="agent-output-placeholder" style="color:var(--text3);font-size:13px;text-align:center;padding:60px 0 40px">
+              <div style="font-size:32px;margin-bottom:12px">🤖</div>
+              Load a patient from the dataset or enter details manually,<br>then click "Run All 5 AI Agents" to start the pipeline.
+            </div>
+          </div>
+        </div>
+        <div id="agents-cards" style="display:none">
+          <div class="card">
+            <div class="card-title">📋 Detailed Agent Breakdown</div>
+            <div id="agents-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUEUE -->
+      <div id="page-queue" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Queue Management</div><div class="page-sub">Real-time patient queue — AI-optimized prioritization</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">📋 OPD Queue — Live</div>
+            <div id="queue-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📊 Queue Analytics</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+              <div style="background:var(--surface2);border-radius:var(--radius);padding:16px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Avg Stay (Dataset)</div><div style="font-family:'Sora',sans-serif;font-size:28px;font-weight:700">6.5d</div></div>
+              <div style="background:var(--surface2);border-radius:var(--radius);padding:16px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">In Queue Now</div><div style="font-family:'Sora',sans-serif;font-size:28px;font-weight:700">8</div></div>
+            </div>
+            <div class="section-title">AI Queue Alerts</div>
+            <div class="alert-bar urgent" id="queue-alert1">Loading queue alerts...</div>
+            <div class="alert-bar" id="queue-alert2"></div>
+            <div class="alert-bar" style="background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20">✓ Dataset: 1,200 patient records connected. AI trained on real healthcare data.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLAIMS -->
+      <div id="page-claims" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Insurance Claims</div><div class="page-sub">AI-powered claim decisions with fraud detection — 1,200 records</div></div>
+          <select class="inp" style="width:auto" id="claim-filter" onchange="renderClaims()">
+            <option value="">All Claims</option>
+            <option value="Yes">Fraud Flagged</option>
+            <option value="No">Clean Claims</option>
+          </select>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card green"><div class="stat-label">Total Approved</div><div class="stat-value">₹109L</div><div class="stat-change">77.5% approval rate</div></div>
+          <div class="stat-card blue"><div class="stat-label">Total Claimed</div><div class="stat-value">₹140L</div><div class="stat-change">1,200 claims total</div></div>
+          <div class="stat-card red"><div class="stat-label">Fraud Detected</div><div class="stat-value">51</div><div class="stat-change neg">AI-flagged anomalies</div></div>
+          <div class="stat-card teal"><div class="stat-label">Avg Claim</div><div class="stat-value">₹11,744</div><div class="stat-change">Per patient record</div></div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+          <table class="patient-table">
+            <thead><tr><th style="padding:12px">Patient</th><th>ID</th><th>Hospital</th><th>Procedure</th><th>Claim ₹</th><th>Approved ₹</th><th>Stay Days</th><th>Fraud Flag</th><th>Action</th></tr></thead>
+            <tbody id="claims-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="claims-pagination"></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="page-analytics" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Analytics</div><div class="page-sub">Insights from 1,200 real patient records</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-title">🧬 Diagnosis Distribution</div><div id="analytics-diag"></div></div>
+          <div class="card"><div class="card-title">🔬 Procedure Types</div><div id="analytics-proc"></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-title">💰 Avg Claim by Diagnosis</div><div id="analytics-claim-diag"></div></div>
+          <div class="card"><div class="card-title">🏥 Avg Stay by Diagnosis</div><div id="analytics-stay-diag"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 Fraud Analysis by Procedure</div>
+          <div id="analytics-fraud-proc" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px"></div>
+        </div>
+      </div>
+
+      <!-- ASSISTANT -->
+      <div id="page-assistant" class="page">
+        <div class="page-header">
+          <div><div class="page-title">AI Assistant</div><div class="page-sub">Powered by Claude — aware of your 1,200-patient dataset</div></div>
+        </div>
+        <div class="card">
+          <div class="chat-container" id="chat-box">
+            <div class="chat-msg bot">
+              <div class="chat-bubble">👋 Hello! I'm MediCore AI, your hospital intelligence assistant. I have full access to your <strong>1,200-patient Kaggle healthcare dataset</strong>.<br><br>I can answer questions about diagnoses, procedures, claims, fraud patterns, and more. Try asking me something!</div>
+              <div class="chat-meta">MediCore AI • Now</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="inp" id="chat-input" placeholder="Ask anything about your patients, claims, or dataset..." onkeydown="if(event.key==='Enter')sendChat()"/>
+            <button class="btn btn-teal" onclick="sendChat()" id="chat-btn">Send</button>
+          </div>
+          <div class="pill-row">
+            <span class="pill" onclick="quickChat('How many fraud cases are in the dataset and which procedures have the most fraud?')">🔍 Fraud patterns</span>
+            <span class="pill" onclick="quickChat('What is the average claim amount for each diagnosis type?')">💰 Claim by diagnosis</span>
+            <span class="pill" onclick="quickChat('Which diagnosis has the longest average hospital stay?')">🏥 Longest stays</span>
+            <span class="pill" onclick="quickChat('What percentage of claims are approved vs denied?')">📊 Approval stats</span>
+            <span class="pill" onclick="quickChat('Give me a full summary of the hospital dataset including top insights.')">📋 Dataset summary</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="page-settings" class="page">
+        <div class="page-header">
+          <div><div class="page-title">API Configuration</div><div class="page-sub">Configure AI models and hospital settings</div></div>
+          <button class="btn btn-teal" onclick="saveSettings()">Save Configuration</button>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">AI Model Configuration</div>
+            <div class="input-row"><div class="input-label">Gemini API Key</div><input class="inp" id="claude-key" type="password" placeholder="sk-ant-api03-..."/></div>
+            <div class="input-row"><div class="input-label">Proxy Server URL (from api.js)</div><input class="inp" id="proxy-url" placeholder="http://localhost:3000"/></div>
+            <div class="input-row"><div class="input-label">Active Model</div>
+              <select class="inp"><option>claude-sonnet-4-20250514 (Recommended)</option></select>
+            </div>
+            <div id="api-status" style="padding:10px;background:#fff8e1;border-radius:8px;font-size:12px;color:#5d4037;margin-top:8px">
+              ⚠ Enter your API key and proxy URL above, then save.
+            </div>
+            <button class="btn btn-teal" style="margin-top:10px;width:100%" onclick="testConnection()">🔌 Test Connection</button>
+          </div>
+          <div class="card">
+            <div class="section-title">Dataset Info</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+              <div>📁 <strong>Source:</strong> Kaggle Healthcare Dataset</div>
+              <div>👥 <strong>Total Records:</strong> 1,200 patients</div>
+              <div>🏥 <strong>Diagnoses:</strong> Asthma, Diabetes, Infection, Fever, Fracture</div>
+              <div>🔬 <strong>Procedures:</strong> Consultation, Blood Test, Surgery, MRI, X-Ray</div>
+              <div>💰 <strong>Claim Range:</strong> ₹1,010 – ₹29,982</div>
+              <div>📅 <strong>Stay Range:</strong> 1–12 days</div>
+              <div>🚨 <strong>Fraud Records:</strong> 51 flagged</div>
+              <div>✅ <strong>Approval Rate:</strong> 77.5%</div>
+            </div>
+            <div style="margin-top:14px;padding:10px;background:#e3f2fd;border-radius:8px;font-size:12px;color:#1565c0">
+              ℹ api.js runs a local proxy server on port 3000. Make sure it's running before using AI features. Your API key stays local.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+function getProxyUrl() {
+  return localStorage.getItem('medicore_proxy') || 'http://localhost:3000';
+}
+function getApiKey() {
+  return localStorage.getItem('medicore_api_key') || '';
+}
+function saveSettings() {
+  const key = document.getElementById('claude-key').value.trim();
+  const proxy = document.getElementById('proxy-url').value.trim();
+  if (key) localStorage.setItem('medicore_api_key', key);
+  if (proxy) localStorage.setItem('medicore_proxy', proxy);
+  showApiStatus('✓ Configuration saved!', 'success');
+}
+function showApiStatus(msg, type) {
+  const el = document.getElementById('api-status');
+  if (!el) return;
+  const styles = {
+    success: 'background:#e8f5e9;color:#2e7d32',
+    error: 'background:#fce8e8;color:#b71c1c',
+    warn: 'background:#fff8e1;color:#5d4037'
+  };
+  el.style.cssText = `padding:10px;border-radius:8px;font-size:12px;margin-top:8px;${styles[type]||styles.warn}`;
+  el.textContent = msg;
+}
+
+async function testConnection() {
+  showApiStatus('🔌 Testing connection...', 'warn');
+  try {
+    const resp = await callClaude([{role:'user',content:'Say "Connection OK" and nothing else.'}], 'You are a test assistant.');
+    showApiStatus('✓ Connection successful! Gemini AI is ready.', 'success');
+  } catch(e) {
+    showApiStatus('✗ Connection failed: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
+// CORE API CALL — single clean function used everywhere
+// ============================================================
+async function callClaude(messages, systemPrompt = '', maxTokens = 1200) {
+  const proxy = getProxyUrl();
+  const body = {
+    model: 'gemini-2.5-flash',
+    max_tokens: maxTokens,
+    messages: messages
+  };
+  if (systemPrompt) body.system = systemPrompt;
+
+  const resp = await fetch(`${proxy}/api/claude`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`API error ${resp.status}: ${err}`);
+  }
+
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || 'API error');
+  return data.content.map(c => c.text || '').join('');
+}
+
+// ============================================================
+// DATASET — embedded from Kaggle healthcare dataset
+// ============================================================
+const DATASET = [{"Patient_ID":"P00001","Patient_Name":"Vasudha Dhar","Age":11,"Gender":"Female","City":"Amaravati","Hospital":"Bora-Kara Hospital","Diagnosis":"Asthma","Procedure":"Consultation","Admission_Date":"2025-02-12","Discharge_Date":"2025-02-14","Stay_Days":2,"Claim_Amount":2463,"Approved_Amount":1924,"Fraud_Flag":"No"},{"Patient_ID":"P00002","Patient_Name":"Diya Sarma","Age":44,"Gender":"Female","City":"Morena","Hospital":"Kohli-Oza Hospital","Diagnosis":"Asthma","Procedure":"Blood Test","Admission_Date":"2026-01-25","Discharge_Date":"2026-01-28","Stay_Days":3,"Claim_Amount":3150,"Approved_Amount":2716,"Fraud_Flag":"No"},{"Patient_ID":"P00003","Patient_Name":"Wishi Balasubramanian","Age":21,"Gender":"Male","City":"Karaikudi","Hospital":"Bava, Vohra and Narang Hospital","Diagnosis":"Asthma","Procedure":"Blood Test","Admission_Date":"2024-11-22","Discharge_Date":"2024-11-29","Stay_Days":7,"Claim_Amount":5124,"Approved_Amount":4021,"Fraud_Flag":"No"},{"Patient_ID":"P00004","Patient_Name":"Laban Wagle","Age":68,"Gender":"Female","City":"Ranchi","Hospital":"Venkataraman, Mitra and Batra Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2026-01-23","Discharge_Date":"2026-02-03","Stay_Days":11,"Claim_Amount":21447,"Approved_Amount":13625,"Fraud_Flag":"No"},{"Patient_ID":"P00005","Patient_Name":"Falguni Ray","Age":49,"Gender":"Male","City":"Mango","Hospital":"Gopal-Sodhi Hospital","Diagnosis":"Infection","Procedure":"Consultation","Admission_Date":"2024-09-13","Discharge_Date":"2024-09-19","Stay_Days":6,"Claim_Amount":2748,"Approved_Amount":2064,"Fraud_Flag":"No"},{"Patient_ID":"P00006","Patient_Name":"Chaitanya Sur","Age":59,"Gender":"Female","City":"Fatehpur","Hospital":"Mallick, Natarajan and Jaggi Hospital","Diagnosis":"Fever","Procedure":"MRI","Admission_Date":"2026-01-07","Discharge_Date":"2026-01-08","Stay_Days":1,"Claim_Amount":16429,"Approved_Amount":12781,"Fraud_Flag":"No"},{"Patient_ID":"P00007","Patient_Name":"Peter Mohanty","Age":16,"Gender":"Female","City":"Uluberia","Hospital":"Khatri and Sons Hospital","Diagnosis":"Diabetes","Procedure":"X-Ray","Admission_Date":"2024-12-31","Discharge_Date":"2025-01-09","Stay_Days":9,"Claim_Amount":12306,"Approved_Amount":10387,"Fraud_Flag":"No"},{"Patient_ID":"P00008","Patient_Name":"Sai Sharma","Age":70,"Gender":"Male","City":"Thanjavur","Hospital":"Murty-Chand Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2025-11-17","Discharge_Date":"2025-11-23","Stay_Days":6,"Claim_Amount":29982,"Approved_Amount":25481,"Fraud_Flag":"Yes"},{"Patient_ID":"P00009","Patient_Name":"Yashoda Parsa","Age":69,"Gender":"Male","City":"Avadi","Hospital":"Gopal PLC Hospital","Diagnosis":"Diabetes","Procedure":"Blood Test","Admission_Date":"2025-06-10","Discharge_Date":"2025-06-13","Stay_Days":3,"Claim_Amount":7887,"Approved_Amount":5248,"Fraud_Flag":"No"},{"Patient_ID":"P00010","Patient_Name":"Tanay Rajan","Age":43,"Gender":"Female","City":"Ahmedabad","Hospital":"Parsa, Kade and Karpe Hospital","Diagnosis":"Diabetes","Procedure":"MRI","Admission_Date":"2024-04-23","Discharge_Date":"2024-05-01","Stay_Days":8,"Claim_Amount":11464,"Approved_Amount":7875,"Fraud_Flag":"No"},{"Patient_ID":"P00011","Patient_Name":"Varsha Kale","Age":11,"Gender":"Male","City":"Nagaon","Hospital":"Mammen, Sharaf and Rama Hospital","Diagnosis":"Asthma","Procedure":"Blood Test","Admission_Date":"2024-08-04","Discharge_Date":"2024-08-12","Stay_Days":8,"Claim_Amount":7783,"Approved_Amount":5453,"Fraud_Flag":"No"},{"Patient_ID":"P00012","Patient_Name":"Laksh Gopal","Age":40,"Gender":"Female","City":"Kollam","Hospital":"Bhat LLC Hospital","Diagnosis":"Fever","Procedure":"Blood Test","Admission_Date":"2025-07-11","Discharge_Date":"2025-07-19","Stay_Days":8,"Claim_Amount":9597,"Approved_Amount":7884,"Fraud_Flag":"No"},{"Patient_ID":"P00013","Patient_Name":"Yoshita Deep","Age":68,"Gender":"Male","City":"Adoni","Hospital":"Seshadri PLC Hospital","Diagnosis":"Fracture","Procedure":"X-Ray","Admission_Date":"2025-05-26","Discharge_Date":"2025-06-02","Stay_Days":7,"Claim_Amount":8653,"Approved_Amount":5471,"Fraud_Flag":"No"},{"Patient_ID":"P00014","Patient_Name":"Pavani Saraf","Age":46,"Gender":"Female","City":"Patiala","Hospital":"Parsa-Mannan Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2026-03-08","Discharge_Date":"2026-03-17","Stay_Days":9,"Claim_Amount":26601,"Approved_Amount":20983,"Fraud_Flag":"Yes"},{"Patient_ID":"P00015","Patient_Name":"Eshana Sami","Age":44,"Gender":"Female","City":"Mathura","Hospital":"Zacharia-Mohanty Hospital","Diagnosis":"Fever","Procedure":"Consultation","Admission_Date":"2024-08-13","Discharge_Date":"2024-08-19","Stay_Days":6,"Claim_Amount":8273,"Approved_Amount":7756,"Fraud_Flag":"No"},{"Patient_ID":"P00016","Patient_Name":"Jeremiah Deshpande","Age":59,"Gender":"Male","City":"Maheshtala","Hospital":"Nagarajan, Chawla and Sandal Hospital","Diagnosis":"Diabetes","Procedure":"Blood Test","Admission_Date":"2024-05-31","Discharge_Date":"2024-06-08","Stay_Days":8,"Claim_Amount":3862,"Approved_Amount":3428,"Fraud_Flag":"No"},{"Patient_ID":"P00017","Patient_Name":"Samar Wali","Age":16,"Gender":"Female","City":"Ozhukarai","Hospital":"Pall, Sachdeva and Sule Hospital","Diagnosis":"Fever","Procedure":"X-Ray","Admission_Date":"2024-12-21","Discharge_Date":"2024-12-24","Stay_Days":3,"Claim_Amount":8751,"Approved_Amount":7695,"Fraud_Flag":"No"},{"Patient_ID":"P00018","Patient_Name":"Wahab Devan","Age":33,"Gender":"Male","City":"Tadepalligudem","Hospital":"Kant, Sood and Das Hospital","Diagnosis":"Diabetes","Procedure":"X-Ray","Admission_Date":"2025-10-18","Discharge_Date":"2025-10-26","Stay_Days":8,"Claim_Amount":9262,"Approved_Amount":6963,"Fraud_Flag":"No"},{"Patient_ID":"P00019","Patient_Name":"Leena Babu","Age":44,"Gender":"Male","City":"Haridwar","Hospital":"Chana, Nanda and Krish Hospital","Diagnosis":"Infection","Procedure":"MRI","Admission_Date":"2025-03-28","Discharge_Date":"2025-04-02","Stay_Days":5,"Claim_Amount":13728,"Approved_Amount":8459,"Fraud_Flag":"No"},{"Patient_ID":"P00020","Patient_Name":"Yatan Ramakrishnan","Age":85,"Gender":"Male","City":"Vadodara","Hospital":"Rout-Nayar Hospital","Diagnosis":"Diabetes","Procedure":"X-Ray","Admission_Date":"2026-01-20","Discharge_Date":"2026-01-31","Stay_Days":11,"Claim_Amount":4021,"Approved_Amount":3224,"Fraud_Flag":"No"},{"Patient_ID":"P00029","Patient_Name":"Oliver Sani","Age":4,"Gender":"Male","City":"Vadodara","Hospital":"Bala-Saran Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2026-04-04","Discharge_Date":"2026-04-09","Stay_Days":5,"Claim_Amount":29297,"Approved_Amount":23023,"Fraud_Flag":"Yes"},{"Patient_ID":"P00046","Patient_Name":"Bhanumati Bansal","Age":58,"Gender":"Male","City":"Howrah","Hospital":"Varma Group Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2025-09-05","Discharge_Date":"2025-09-06","Stay_Days":1,"Claim_Amount":27825,"Approved_Amount":25667,"Fraud_Flag":"Yes"},{"Patient_ID":"P00055","Patient_Name":"Frado Pillai","Age":89,"Gender":"Female","City":"Shivpuri","Hospital":"Varkey, Sura and Basu Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2026-03-07","Discharge_Date":"2026-03-18","Stay_Days":11,"Claim_Amount":25317,"Approved_Amount":15613,"Fraud_Flag":"Yes"},{"Patient_ID":"P00068","Patient_Name":"Niharika Singhal","Age":29,"Gender":"Male","City":"Giridih","Hospital":"Badal-Dewan Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2025-09-27","Discharge_Date":"2025-10-02","Stay_Days":5,"Claim_Amount":26017,"Approved_Amount":23963,"Fraud_Flag":"Yes"},{"Patient_ID":"P00096","Patient_Name":"Ubika Loyal","Age":18,"Gender":"Female","City":"Bidhannagar","Hospital":"Krishna, Buch and Atwal Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2026-01-14","Discharge_Date":"2026-01-15","Stay_Days":1,"Claim_Amount":25204,"Approved_Amount":19410,"Fraud_Flag":"Yes"},{"Patient_ID":"P00133","Patient_Name":"Pallavi Gupta","Age":36,"Gender":"Female","City":"Nanded","Hospital":"Naidu-Mohan Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2026-03-23","Discharge_Date":"2026-03-30","Stay_Days":7,"Claim_Amount":26791,"Approved_Amount":20987,"Fraud_Flag":"Yes"},{"Patient_ID":"P00152","Patient_Name":"Yashvi Kapur","Age":59,"Gender":"Male","City":"Durgapur","Hospital":"Bala, Dhingra and Chadha Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2025-04-28","Discharge_Date":"2025-05-06","Stay_Days":8,"Claim_Amount":28427,"Approved_Amount":25973,"Fraud_Flag":"Yes"},{"Patient_ID":"P00160","Patient_Name":"Om Sachdev","Age":25,"Gender":"Male","City":"Naihati","Hospital":"Lall Group Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2025-10-17","Discharge_Date":"2025-10-24","Stay_Days":7,"Claim_Amount":28966,"Approved_Amount":23130,"Fraud_Flag":"Yes"},{"Patient_ID":"P00168","Patient_Name":"Leela Bhargava","Age":45,"Gender":"Male","City":"Bhiwani","Hospital":"Shukla-Kaul Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2025-07-17","Discharge_Date":"2025-07-22","Stay_Days":5,"Claim_Amount":28965,"Approved_Amount":27155,"Fraud_Flag":"Yes"},{"Patient_ID":"P00191","Patient_Name":"Girik Oommen","Age":1,"Gender":"Male","City":"Yamunanagar","Hospital":"Mand-Bhakta Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2024-07-25","Discharge_Date":"2024-08-04","Stay_Days":10,"Claim_Amount":29651,"Approved_Amount":18577,"Fraud_Flag":"Yes"},{"Patient_ID":"P00232","Patient_Name":"Mahika Ganesan","Age":88,"Gender":"Female","City":"Sambhal","Hospital":"Bhakta-Choudhary Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2025-02-24","Discharge_Date":"2025-03-01","Stay_Days":5,"Claim_Amount":29439,"Approved_Amount":24282,"Fraud_Flag":"Yes"},{"Patient_ID":"P00233","Patient_Name":"Ekaja Keer","Age":55,"Gender":"Female","City":"Gudivada","Hospital":"Hayre, Karan and Ramesh Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2026-04-07","Discharge_Date":"2026-04-08","Stay_Days":1,"Claim_Amount":28506,"Approved_Amount":25560,"Fraud_Flag":"Yes"},{"Patient_ID":"P00252","Patient_Name":"Manthan Shroff","Age":45,"Gender":"Female","City":"Ambarnath","Hospital":"Nanda, Mangal and Shetty Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2026-01-19","Discharge_Date":"2026-01-20","Stay_Days":1,"Claim_Amount":26195,"Approved_Amount":22872,"Fraud_Flag":"Yes"},{"Patient_ID":"P00294","Patient_Name":"Chakradev Bajaj","Age":56,"Gender":"Female","City":"Sultan Pur Majra","Hospital":"Sankaran LLC Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2024-12-25","Discharge_Date":"2024-12-29","Stay_Days":4,"Claim_Amount":26816,"Approved_Amount":24938,"Fraud_Flag":"Yes"},{"Patient_ID":"P00339","Patient_Name":"Aashi Prakash","Age":39,"Gender":"Male","City":"Rajpur Sonarpur","Hospital":"Singh LLC Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2025-04-03","Discharge_Date":"2025-04-06","Stay_Days":3,"Claim_Amount":25469,"Approved_Amount":16298,"Fraud_Flag":"Yes"},{"Patient_ID":"P00393","Patient_Name":"Raagini Jani","Age":46,"Gender":"Male","City":"Bhiwandi","Hospital":"Char and Sons Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2025-10-26","Discharge_Date":"2025-11-05","Stay_Days":10,"Claim_Amount":25332,"Approved_Amount":16448,"Fraud_Flag":"Yes"},{"Patient_ID":"P00413","Patient_Name":"Jack Sehgal","Age":51,"Gender":"Female","City":"Patna","Hospital":"Dayal LLC Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2025-11-04","Discharge_Date":"2025-11-15","Stay_Days":11,"Claim_Amount":25397,"Approved_Amount":19541,"Fraud_Flag":"Yes"},{"Patient_ID":"P00468","Patient_Name":"Wridesh Kamdar","Age":39,"Gender":"Female","City":"Bokaro","Hospital":"Gour, Mital and Ghosh Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2025-05-05","Discharge_Date":"2025-05-17","Stay_Days":12,"Claim_Amount":27448,"Approved_Amount":24146,"Fraud_Flag":"Yes"},{"Patient_ID":"P00507","Patient_Name":"Dipta Mittal","Age":37,"Gender":"Female","City":"Agartala","Hospital":"Cheema, Sarraf and Oak Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2024-07-19","Discharge_Date":"2024-07-29","Stay_Days":10,"Claim_Amount":27588,"Approved_Amount":19043,"Fraud_Flag":"Yes"},{"Patient_ID":"P00524","Patient_Name":"Alka Sangha","Age":67,"Gender":"Male","City":"Proddatur","Hospital":"Nagi, Gokhale and Kalla Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2025-04-01","Discharge_Date":"2025-04-09","Stay_Days":8,"Claim_Amount":26551,"Approved_Amount":20329,"Fraud_Flag":"Yes"},{"Patient_ID":"P00535","Patient_Name":"Dayamai Dar","Age":43,"Gender":"Male","City":"Thanjavur","Hospital":"Murty Inc Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2025-07-16","Discharge_Date":"2025-07-19","Stay_Days":3,"Claim_Amount":27231,"Approved_Amount":19316,"Fraud_Flag":"Yes"},{"Patient_ID":"P00620","Patient_Name":"Ishwar Ben","Age":33,"Gender":"Female","City":"Hyderabad","Hospital":"Shenoy Ltd Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2025-06-15","Discharge_Date":"2025-06-19","Stay_Days":4,"Claim_Amount":28743,"Approved_Amount":25438,"Fraud_Flag":"Yes"},{"Patient_ID":"P00621","Patient_Name":"Sneha Sidhu","Age":74,"Gender":"Female","City":"Ludhiana","Hospital":"Rattan Group Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2025-10-22","Discharge_Date":"2025-11-02","Stay_Days":11,"Claim_Amount":25659,"Approved_Amount":20906,"Fraud_Flag":"Yes"},{"Patient_ID":"P00637","Patient_Name":"Jyoti Bala","Age":29,"Gender":"Male","City":"Narasaraopet","Hospital":"Taneja, Trivedi and Buch Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2025-08-06","Discharge_Date":"2025-08-15","Stay_Days":9,"Claim_Amount":25092,"Approved_Amount":23165,"Fraud_Flag":"Yes"},{"Patient_ID":"P00655","Patient_Name":"Fitan Contractor","Age":3,"Gender":"Male","City":"Rampur","Hospital":"Das, Mistry and Dar Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2025-04-12","Discharge_Date":"2025-04-14","Stay_Days":2,"Claim_Amount":29012,"Approved_Amount":25085,"Fraud_Flag":"Yes"},{"Patient_ID":"P00683","Patient_Name":"Lakshit Mittal","Age":42,"Gender":"Male","City":"Bardhaman","Hospital":"Baral Group Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2025-07-08","Discharge_Date":"2025-07-12","Stay_Days":4,"Claim_Amount":27004,"Approved_Amount":22671,"Fraud_Flag":"Yes"},{"Patient_ID":"P00696","Patient_Name":"Vincent Yadav","Age":26,"Gender":"Female","City":"Saharanpur","Hospital":"Pandey, Pradhan and Bajwa Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2026-03-29","Discharge_Date":"2026-03-31","Stay_Days":2,"Claim_Amount":28157,"Approved_Amount":20088,"Fraud_Flag":"Yes"},{"Patient_ID":"P00728","Patient_Name":"Lopa Srivastava","Age":4,"Gender":"Female","City":"Agartala","Hospital":"Arya-Badal Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2024-05-10","Discharge_Date":"2024-05-21","Stay_Days":11,"Claim_Amount":27040,"Approved_Amount":19432,"Fraud_Flag":"Yes"},{"Patient_ID":"P00732","Patient_Name":"Abha Mannan","Age":43,"Gender":"Male","City":"Sultan Pur Majra","Hospital":"Subramanian, Behl and Aurora Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2024-08-05","Discharge_Date":"2024-08-11","Stay_Days":6,"Claim_Amount":27327,"Approved_Amount":19643,"Fraud_Flag":"Yes"},{"Patient_ID":"P00770","Patient_Name":"Abha Krish","Age":70,"Gender":"Male","City":"Kharagpur","Hospital":"Zachariah, Hora and Yadav Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2025-01-05","Discharge_Date":"2025-01-10","Stay_Days":5,"Claim_Amount":27449,"Approved_Amount":19224,"Fraud_Flag":"Yes"},{"Patient_ID":"P00806","Patient_Name":"David Dhar","Age":80,"Gender":"Female","City":"Bharatpur","Hospital":"Kant Group Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2026-03-24","Discharge_Date":"2026-04-02","Stay_Days":9,"Claim_Amount":26134,"Approved_Amount":20672,"Fraud_Flag":"Yes"},{"Patient_ID":"P00827","Patient_Name":"Megha Kashyap","Age":38,"Gender":"Male","City":"Ambattur","Hospital":"Deo PLC Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2025-02-26","Discharge_Date":"2025-03-02","Stay_Days":4,"Claim_Amount":26683,"Approved_Amount":22328,"Fraud_Flag":"Yes"},{"Patient_ID":"P00829","Patient_Name":"Yamini Chaudhry","Age":78,"Gender":"Female","City":"Hosur","Hospital":"Dua-Kara Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2024-08-21","Discharge_Date":"2024-08-27","Stay_Days":6,"Claim_Amount":25531,"Approved_Amount":23909,"Fraud_Flag":"Yes"},{"Patient_ID":"P00866","Patient_Name":"Raagini Choudhary","Age":73,"Gender":"Female","City":"Hubli-Dharwad","Hospital":"Tripathi-Chada Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2024-09-09","Discharge_Date":"2024-09-12","Stay_Days":3,"Claim_Amount":28030,"Approved_Amount":21590,"Fraud_Flag":"Yes"},{"Patient_ID":"P00889","Patient_Name":"Hritik Pandya","Age":89,"Gender":"Female","City":"Bongaigaon","Hospital":"Saha-Iyengar Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2025-12-27","Discharge_Date":"2025-12-31","Stay_Days":4,"Claim_Amount":28600,"Approved_Amount":21783,"Fraud_Flag":"Yes"},{"Patient_ID":"P00915","Patient_Name":"Ria Rajagopal","Age":44,"Gender":"Male","City":"Chittoor","Hospital":"Sheth-Behl Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2024-08-07","Discharge_Date":"2024-08-13","Stay_Days":6,"Claim_Amount":29507,"Approved_Amount":23712,"Fraud_Flag":"Yes"},{"Patient_ID":"P00928","Patient_Name":"Hema Gola","Age":3,"Gender":"Female","City":"Baranagar","Hospital":"Jhaveri-Bala Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2024-08-03","Discharge_Date":"2024-08-08","Stay_Days":5,"Claim_Amount":27888,"Approved_Amount":19080,"Fraud_Flag":"Yes"},{"Patient_ID":"P00938","Patient_Name":"Udarsh Prasad","Age":70,"Gender":"Male","City":"Guntakal","Hospital":"Lad Group Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2025-09-11","Discharge_Date":"2025-09-18","Stay_Days":7,"Claim_Amount":28682,"Approved_Amount":25037,"Fraud_Flag":"Yes"},{"Patient_ID":"P00966","Patient_Name":"Chaaya Warrior","Age":73,"Gender":"Male","City":"Shivpuri","Hospital":"Dash, Kohli and Nagi Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2025-12-02","Discharge_Date":"2025-12-11","Stay_Days":9,"Claim_Amount":25031,"Approved_Amount":21549,"Fraud_Flag":"Yes"},{"Patient_ID":"P01003","Patient_Name":"Anirudh Dixit","Age":22,"Gender":"Female","City":"Sirsa","Hospital":"Bumb PLC Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2026-02-20","Discharge_Date":"2026-02-26","Stay_Days":6,"Claim_Amount":25039,"Approved_Amount":22780,"Fraud_Flag":"Yes"},{"Patient_ID":"P01010","Patient_Name":"Anvi Bhatti","Age":16,"Gender":"Male","City":"Patna","Hospital":"Butala, Padmanabhan and Khanna Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2024-11-08","Discharge_Date":"2024-11-17","Stay_Days":9,"Claim_Amount":27059,"Approved_Amount":17158,"Fraud_Flag":"Yes"},{"Patient_ID":"P01013","Patient_Name":"Advik Tailor","Age":64,"Gender":"Female","City":"Amaravati","Hospital":"Kala LLC Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2025-02-22","Discharge_Date":"2025-02-28","Stay_Days":6,"Claim_Amount":25793,"Approved_Amount":15506,"Fraud_Flag":"Yes"},{"Patient_ID":"P01022","Patient_Name":"Samuel Bhardwaj","Age":81,"Gender":"Male","City":"Proddatur","Hospital":"Vora Ltd Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2025-05-18","Discharge_Date":"2025-05-29","Stay_Days":11,"Claim_Amount":28883,"Approved_Amount":25983,"Fraud_Flag":"Yes"},{"Patient_ID":"P01044","Patient_Name":"Chaitaly Gera","Age":34,"Gender":"Female","City":"Srinagar","Hospital":"Manda-Mani Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2024-06-29","Discharge_Date":"2024-07-02","Stay_Days":3,"Claim_Amount":28594,"Approved_Amount":21121,"Fraud_Flag":"Yes"},{"Patient_ID":"P01067","Patient_Name":"Eiravati Sandhu","Age":53,"Gender":"Male","City":"Raurkela Industrial Township","Hospital":"Singh-Majumdar Hospital","Diagnosis":"Fracture","Procedure":"Surgery","Admission_Date":"2024-05-01","Discharge_Date":"2024-05-02","Stay_Days":1,"Claim_Amount":27928,"Approved_Amount":21746,"Fraud_Flag":"Yes"},{"Patient_ID":"P01089","Patient_Name":"Deepa Pandit","Age":29,"Gender":"Female","City":"Rewa","Hospital":"Wable-Khalsa Hospital","Diagnosis":"Asthma","Procedure":"Surgery","Admission_Date":"2026-03-22","Discharge_Date":"2026-03-29","Stay_Days":7,"Claim_Amount":29970,"Approved_Amount":19892,"Fraud_Flag":"Yes"},{"Patient_ID":"P01158","Patient_Name":"George Bhatnagar","Age":62,"Gender":"Female","City":"Moradabad","Hospital":"Bhakta, Chadha and Basu Hospital","Diagnosis":"Fever","Procedure":"Surgery","Admission_Date":"2025-09-22","Discharge_Date":"2025-10-01","Stay_Days":9,"Claim_Amount":27154,"Approved_Amount":20445,"Fraud_Flag":"Yes"},{"Patient_ID":"P01163","Patient_Name":"Forum Raja","Age":52,"Gender":"Male","City":"Kirari Suleman Nagar","Hospital":"Krishnamurthy, Gole and Shenoy Hospital","Diagnosis":"Diabetes","Procedure":"Surgery","Admission_Date":"2025-07-28","Discharge_Date":"2025-08-08","Stay_Days":11,"Claim_Amount":26203,"Approved_Amount":15874,"Fraud_Flag":"Yes"},{"Patient_ID":"P01185","Patient_Name":"Dalbir Chopra","Age":50,"Gender":"Female","City":"Vijayawada","Hospital":"Chaudry Ltd Hospital","Diagnosis":"Infection","Procedure":"Surgery","Admission_Date":"2024-10-12","Discharge_Date":"2024-10-24","Stay_Days":12,"Claim_Amount":28187,"Approved_Amount":24807,"Fraud_Flag":"Yes"}];
+
+// NOTE: The above is a condensed dataset with all 51 fraud records plus first 20 clean records.
+// For the full 1200-record dataset, the DATASET array from the original HTML should be pasted here.
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const DIAG_MAP = {
+  'Asthma':   {symptoms:'Shortness of breath, wheezing, chest tightness, coughing at night', dept:'Pulmonology'},
+  'Diabetes': {symptoms:'Fatigue, frequent urination, blurred vision, slow wound healing', dept:'Endocrinology'},
+  'Infection':{symptoms:'Fever, body ache, fatigue, chills, inflammation', dept:'General Medicine'},
+  'Fever':    {symptoms:'High fever, headache, sweating, fatigue, loss of appetite', dept:'General'},
+  'Fracture': {symptoms:'Bone pain, swelling, restricted movement, bruising', dept:'Orthopedics'},
+};
+const PROC_ICONS = {Consultation:'🩺','Blood Test':'🧪',Surgery:'⚕️',MRI:'🔬','X-Ray':'☢️'};
+const DIAG_COLORS = {Asthma:'#1e88e5',Diabetes:'#00bfa5',Infection:'#f9a825',Fever:'#e53935',Fracture:'#9c27b0'};
+const PROC_COLORS = {Consultation:'#00bfa5','Blood Test':'#1e88e5',Surgery:'#e53935',MRI:'#9c27b0','X-Ray':'#f9a825'};
+
+// ============================================================
+// STATE
+// ============================================================
+let ptPage = 1, ptFiltered = [...DATASET];
+let claimsPage = 1, claimsFiltered = [...DATASET];
+const chatHistory = [];
+const PAGE_SIZE = 15;
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  const ds = now.toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dash-date').textContent = ds + ' — Real-time hospital intelligence';
+
+  // Load saved settings
+  const savedKey = localStorage.getItem('medicore_api_key');
+  const savedProxy = localStorage.getItem('medicore_proxy');
+  if (savedKey) document.getElementById('claude-key').value = savedKey;
+  if (savedProxy) document.getElementById('proxy-url').value = savedProxy;
+  else document.getElementById('proxy-url').value = 'http://localhost:3000';
+
+  renderDashboard();
+  filterPatients();
+  renderClaims();
+  renderQueue();
+  renderAnalytics();
+  renderAgentQuickLoad();
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.topnav button').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (pg) pg.classList.add('active');
+}
+
+function nav(el, id) {
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  showPage(id);
+}
+
+// ============================================================
+// STAT HELPERS
+// ============================================================
+function countBy(arr, key) {
+  return arr.reduce((a, r) => { a[r[key]] = (a[r[key]]||0)+1; return a; }, {});
+}
+function avgBy(arr, grp, val) {
+  const s={}, c={};
+  arr.forEach(r => { s[r[grp]]=(s[r[grp]]||0)+r[val]; c[r[grp]]=(c[r[grp]]||0)+1; });
+  return Object.fromEntries(Object.keys(s).map(k=>[k, Math.round(s[k]/c[k])]));
+}
+function makeBars(el, data, colors, fmt) {
+  const max = Math.max(...Object.values(data));
+  const total = Object.values(data).reduce((a,b)=>a+b,0);
+  el.innerHTML = Object.entries(data).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+    <div class="bar-wrap">
+      <div style="width:110px;font-size:12px;color:var(--text2);flex-shrink:0">${k}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:${colors[k]||'#1e88e5'}"></div></div>
+      <div style="font-size:12px;color:var(--text3);width:90px;text-align:right;flex-shrink:0">${fmt(v,total)}</div>
+    </div>`).join('');
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const diagCounts = countBy(DATASET,'Diagnosis');
+  makeBars(document.getElementById('diag-bars'), diagCounts, DIAG_COLORS, (v,t)=>`${v} (${Math.round(v/t*100)}%)`);
+  const procCounts = countBy(DATASET,'Procedure');
+  makeBars(document.getElementById('proc-bars'), procCounts, PROC_COLORS, (v,t)=>`${v} (${Math.round(v/t*100)}%)`);
+
+  const recent = DATASET.slice(0,6);
+  document.getElementById('dash-recent').innerHTML = recent.map(r=>`
+    <tr>
+      <td><strong>${r.Patient_Name}</strong></td>
+      <td style="font-size:11px;color:var(--text3)">${r.Patient_ID}</td>
+      <td>${r.Age}</td>
+      <td><span class="pill teal" style="cursor:default">${r.Diagnosis}</span></td>
+      <td>${r.Procedure}</td>
+      <td>₹${r.Claim_Amount.toLocaleString('en-IN')}</td>
+      <td><span class="status-badge ${r.Fraud_Flag==='Yes'?'denied':'approved'}">${r.Fraud_Flag==='Yes'?'⚠ Fraud':'✓ Clean'}</span></td>
+      <td><button class="btn btn-teal" style="padding:4px 10px;font-size:11px" onclick="loadToAgent('${r.Patient_ID}')">Run AI</button></td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// PATIENTS
+// ============================================================
+function filterPatients() {
+  const search = (document.getElementById('pt-search').value||'').toLowerCase();
+  const diag = document.getElementById('filter-diag').value;
+  const proc = document.getElementById('filter-proc').value;
+  const fraud = document.getElementById('filter-fraud').value;
+  ptFiltered = DATASET.filter(r => {
+    if (diag && r.Diagnosis!==diag) return false;
+    if (proc && r.Procedure!==proc) return false;
+    if (fraud && r.Fraud_Flag!==fraud) return false;
+    if (search && !`${r.Patient_Name} ${r.Patient_ID} ${r.City} ${r.Hospital}`.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  ptPage = 1;
+  document.getElementById('pt-showing').textContent = ptFiltered.length;
+  renderPatients();
+}
+
+function renderPatients() {
+  const start = (ptPage-1)*PAGE_SIZE;
+  const page = ptFiltered.slice(start, start+PAGE_SIZE);
+  document.getElementById('pt-tbody').innerHTML = page.map(r=>`
+    <tr>
+      <td style="padding:11px 12px"><strong>${r.Patient_Name}</strong><div style="font-size:11px;color:var(--text3)">${r.City}</div></td>
+      <td style="font-size:11px;color:var(--text3)">${r.Patient_ID}</td>
+      <td>${r.Age}</td>
+      <td style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Hospital}">${r.Hospital}</td>
+      <td><span class="pill teal" style="cursor:default;font-size:11px">${r.Diagnosis}</span></td>
+      <td>${PROC_ICONS[r.Procedure]||''} ${r.Procedure}</td>
+      <td style="text-align:center">${r.Stay_Days}d</td>
+      <td>₹${r.Claim_Amount.toLocaleString('en-IN')}</td>
+      <td style="color:var(--green2)">₹${r.Approved_Amount.toLocaleString('en-IN')}</td>
+      <td><span class="status-badge ${r.Fraud_Flag==='Yes'?'denied':'approved'}">${r.Fraud_Flag==='Yes'?'⚠ Fraud':'✓'}</span></td>
+      <td><button class="btn btn-teal" style="padding:4px 10px;font-size:11px" onclick="loadToAgent('${r.Patient_ID}')">AI →</button></td>
+    </tr>`).join('');
+  renderPagination('pt-pagination', ptFiltered.length, ptPage, p=>{ptPage=p;renderPatients();});
+}
+
+// ============================================================
+// CLAIMS
+// ============================================================
+function renderClaims() {
+  const filter = document.getElementById('claim-filter').value;
+  claimsFiltered = filter ? DATASET.filter(r=>r.Fraud_Flag===filter) : [...DATASET];
+  claimsPage = 1;
+  renderClaimsPage();
+}
+
+function renderClaimsPage() {
+  const start = (claimsPage-1)*PAGE_SIZE;
+  const page = claimsFiltered.slice(start, start+PAGE_SIZE);
+  document.getElementById('claims-tbody').innerHTML = page.map(r=>`
+    <tr>
+      <td style="padding:11px 12px"><strong>${r.Patient_Name}</strong></td>
+      <td style="font-size:11px;color:var(--text3)">${r.Patient_ID}</td>
+      <td style="font-size:11px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Hospital}">${r.Hospital}</td>
+      <td>${PROC_ICONS[r.Procedure]||''} ${r.Procedure}</td>
+      <td style="font-weight:600">₹${r.Claim_Amount.toLocaleString('en-IN')}</td>
+      <td style="color:var(--green2);font-weight:600">₹${r.Approved_Amount.toLocaleString('en-IN')}</td>
+      <td style="text-align:center">${r.Stay_Days}d</td>
+      <td><span class="status-badge ${r.Fraud_Flag==='Yes'?'fraud':'approved'}">${r.Fraud_Flag==='Yes'?'🚨 FRAUD':'✓ Clean'}</span></td>
+      <td><button class="btn btn-teal" style="padding:4px 10px;font-size:11px" onclick="loadToAgent('${r.Patient_ID}')">AI →</button></td>
+    </tr>`).join('');
+  renderPagination('claims-pagination', claimsFiltered.length, claimsPage, p=>{claimsPage=p;renderClaimsPage();});
+}
+
+// ============================================================
+// PAGINATION
+// ============================================================
+function renderPagination(id, total, current, onClick) {
+  const totalPages = Math.ceil(total/PAGE_SIZE);
+  if (totalPages<=1) { document.getElementById(id).innerHTML=''; return; }
+  let btns = `<span style="font-size:12px;color:var(--text3);margin-right:8px">Page ${current}/${totalPages} (${total} records)</span>`;
+  const start = Math.max(1,current-2), end = Math.min(totalPages,current+2);
+  if (start>1) { btns+=`<button class="page-btn" onclick="(${onClick})(1)">1</button>`; if(start>2) btns+='<span style="color:var(--text3)">…</span>'; }
+  for(let i=start;i<=end;i++) btns+=`<button class="page-btn ${i===current?'active':''}" onclick="(${onClick})(${i})">${i}</button>`;
+  if(end<totalPages) { if(end<totalPages-1) btns+='<span style="color:var(--text3)">…</span>'; btns+=`<button class="page-btn" onclick="(${onClick})(${totalPages})">${totalPages}</button>`; }
+  document.getElementById(id).innerHTML = btns;
+}
+
+// ============================================================
+// QUEUE
+// ============================================================
+function renderQueue() {
+  const diags = ['Fracture','Asthma','Diabetes','Infection','Fever','Infection','Fever','Fracture'];
+  const queuePts = diags.map(d=>DATASET.find(r=>r.Diagnosis===d)).filter(Boolean).slice(0,8);
+  const urgency = [true,false,false,false,false,false,false,false];
+  const waits = ['⚡ Now','5 min','12 min','19 min','27 min','34 min','41 min','50 min'];
+  const statuses = ['critical','waiting','stable','waiting','stable','stable','stable','admitted'];
+
+  document.getElementById('queue-list').innerHTML = queuePts.map((r,i)=>`
+    <div class="queue-row">
+      <div class="queue-num ${urgency[i]?'urgent':''}">${i+1}</div>
+      <div><div class="queue-name">${r.Patient_Name}</div><div class="queue-dept">${DIAG_MAP[r.Diagnosis]?.dept||r.Diagnosis} • ${r.Diagnosis}</div></div>
+      <span class="status-badge ${statuses[i]}" style="margin:0 8px">${statuses[i].charAt(0).toUpperCase()+statuses[i].slice(1)}</span>
+      <div class="queue-wait">${waits[i]}</div>
+    </div>`).join('');
+
+  if (queuePts[0]) {
+    document.getElementById('queue-alert1').textContent = `🚨 Patient #1 — ${queuePts[0].Patient_Name}: ${queuePts[0].Diagnosis} — Immediate attention required`;
+    document.getElementById('queue-alert2').textContent = `ℹ️ ${queuePts[0].Hospital} — Claim ₹${queuePts[0].Claim_Amount.toLocaleString('en-IN')} filed for ${queuePts[0].Procedure}`;
+  }
+}
+
+// ============================================================
+// ANALYTICS
+// ============================================================
+function renderAnalytics() {
+  const diagCounts = countBy(DATASET,'Diagnosis');
+  makeBars(document.getElementById('analytics-diag'), diagCounts, DIAG_COLORS, (v,t)=>`${v} (${Math.round(v/t*100)}%)`);
+  const procCounts = countBy(DATASET,'Procedure');
+  makeBars(document.getElementById('analytics-proc'), procCounts, PROC_COLORS, (v,t)=>`${v} (${Math.round(v/t*100)}%)`);
+  const avgClaim = avgBy(DATASET,'Diagnosis','Claim_Amount');
+  makeBars(document.getElementById('analytics-claim-diag'), avgClaim, DIAG_COLORS, v=>`₹${v.toLocaleString('en-IN')}`);
+  const avgStay = avgBy(DATASET,'Diagnosis','Stay_Days');
+  makeBars(document.getElementById('analytics-stay-diag'), avgStay, DIAG_COLORS, v=>`${v}d`);
+
+  const procs = ['Consultation','Blood Test','Surgery','MRI','X-Ray'];
+  document.getElementById('analytics-fraud-proc').innerHTML = procs.map(proc=>{
+    const total = DATASET.filter(r=>r.Procedure===proc).length;
+    const frauds = DATASET.filter(r=>r.Procedure===proc&&r.Fraud_Flag==='Yes').length;
+    const pct = total ? Math.round(frauds/total*100) : 0;
+    return `<div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">${PROC_ICONS[proc]||'🔬'}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:4px">${proc}</div>
+      <div style="font-size:24px;font-weight:700;font-family:'Sora',sans-serif;color:${pct>5?'var(--red)':'var(--green2)'}">${pct}%</div>
+      <div style="font-size:11px;color:var(--text3)">${frauds} / ${total} fraud</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// AGENT QUICK LOAD
+// ============================================================
+function renderAgentQuickLoad() {
+  const diags = ['Asthma','Diabetes','Infection','Fever','Fracture'];
+  const samples = diags.map(d=>DATASET.find(r=>r.Diagnosis===d)).filter(Boolean);
+  document.getElementById('quick-patients').innerHTML = samples.map(r=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;cursor:pointer;border:1px solid var(--border);transition:all 0.15s" 
+         onclick="loadToAgent('${r.Patient_ID}')" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+      <span style="font-size:16px">${PROC_ICONS[r.Procedure]||'🩺'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.Patient_Name}</div>
+        <div style="font-size:11px;color:var(--text3)">${r.Diagnosis} • ${r.Procedure} • ₹${r.Claim_Amount.toLocaleString('en-IN')}</div>
+      </div>
+      <span class="status-badge ${r.Fraud_Flag==='Yes'?'denied':'approved'}" style="font-size:10px">${r.Fraud_Flag==='Yes'?'⚠':'✓'}</span>
+    </div>`).join('');
+}
+
+function loadToAgent(patientId) {
+  const r = DATASET.find(p=>p.Patient_ID===patientId);
+  if (!r) return;
+  document.getElementById('ai-name').value = r.Patient_Name;
+  document.getElementById('ai-diagnosis').value = r.Diagnosis;
+  document.getElementById('ai-symptoms').value = DIAG_MAP[r.Diagnosis]?.symptoms || r.Diagnosis;
+  document.getElementById('ai-treatment').value = r.Procedure;
+  document.getElementById('ai-cost').value = r.Claim_Amount;
+  document.getElementById('ai-plan').value = r.Claim_Amount>20000 ? 'Premium' : r.Claim_Amount>10000 ? 'Standard' : 'Basic';
+  // Navigate to agents page
+  nav(document.querySelector('.sidebar-item:nth-child(5)'), 'agents');
+  showPage('agents');
+}
+
+function diagnosisChanged() {
+  const diag = document.getElementById('ai-diagnosis').value;
+  if (diag && DIAG_MAP[diag]) document.getElementById('ai-symptoms').value = DIAG_MAP[diag].symptoms;
+}
+
+// ============================================================
+// AI AGENTS — CLEAN SINGLE IMPLEMENTATION
+// ============================================================
+async function runAgents() {
+  const name     = document.getElementById('ai-name').value.trim() || 'Unknown Patient';
+  const diagnosis= document.getElementById('ai-diagnosis').value;
+  const symptoms = document.getElementById('ai-symptoms').value.trim();
+  const treatment= document.getElementById('ai-treatment').value;
+  const plan     = document.getElementById('ai-plan').value;
+  const cost     = parseInt(document.getElementById('ai-cost').value) || 10000;
+
+  if (!diagnosis) { alert('Please select a diagnosis first.'); return; }
+  if (!symptoms) { alert('Please enter symptoms.'); return; }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running AI pipeline...';
+
+  // Show loading state
+  document.getElementById('agent-results').innerHTML = `
+    <div class="section-title">Agent Output — ${name}</div>
+    <div style="padding:20px 0">
+      ${['🫁 Symptom Analysis','🔬 Diagnostic Agent','💊 Treatment Evaluation','📋 Claim Decision','🚨 Fraud Detection'].map((label,i)=>`
+        <div id="agent-step-${i}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border)">
+          <span style="font-size:18px">${label.split(' ')[0]}</span>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text1)">${label.slice(2)}</div>
+            <div id="agent-step-status-${i}" style="font-size:11px;color:var(--text3)">Waiting...</div>
+          </div>
+          <span id="agent-step-icon-${i}" style="margin-left:auto;font-size:18px">⏳</span>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('agents-cards').style.display = 'none';
+
+  const updateStep = (i, status, detail, done=false) => {
+    const el = document.getElementById(`agent-step-${i}`);
+    const sd = document.getElementById(`agent-step-status-${i}`);
+    const ic = document.getElementById(`agent-step-icon-${i}`);
+    if (!el) return;
+    if (done) { el.style.background='#e8f5e9'; el.style.borderColor='var(--green2)'; ic.textContent='✅'; }
+    else { el.style.background='#e0f7fa'; el.style.borderColor='var(--teal)'; ic.textContent='⚙️'; }
+    if (sd) sd.textContent = detail;
+  };
+
+  try {
+    // Build dataset context summary
+    const fraudCount = DATASET.filter(r=>r.Fraud_Flag==='Yes').length;
+    const diagAvgClaim = Math.round(DATASET.filter(r=>r.Diagnosis===diagnosis).reduce((a,r)=>a+r.Claim_Amount,0) / (DATASET.filter(r=>r.Diagnosis===diagnosis).length||1));
+    const diagAvgStay = (DATASET.filter(r=>r.Diagnosis===diagnosis).reduce((a,r)=>a+r.Stay_Days,0) / (DATASET.filter(r=>r.Diagnosis===diagnosis).length||1)).toFixed(1);
+    const procFraudRate = DATASET.filter(r=>r.Procedure===treatment&&r.Fraud_Flag==='Yes').length / (DATASET.filter(r=>r.Procedure===treatment).length||1);
+
+    updateStep(0, 'Running', 'Analyzing symptoms...');
+
+    const prompt = `You are MediCore AI, a hospital intelligence system analyzing a patient case.
+You have access to a real healthcare dataset:
+- Total patients: ${DATASET.length}
+- Fraud cases: ${fraudCount}
+- Avg claim for ${diagnosis}: ₹${diagAvgClaim.toLocaleString('en-IN')}
+- Avg stay for ${diagnosis}: ${diagAvgStay} days
+- Fraud rate for ${treatment}: ${Math.round(procFraudRate*100)}%
+
+PATIENT CASE:
+Name: ${name}
+Diagnosis: ${diagnosis}
+Symptoms: ${symptoms}
+Requested Procedure: ${treatment}
+Insurance Plan: ${plan}
+Claim Amount: ₹${cost.toLocaleString('en-IN')}
+
+Run all 5 agents and return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
+{
+  "symptom": {
+    "severity": "Low|Moderate|High|Critical",
+    "condition": "primary condition identified",
+    "detail": "brief clinical assessment",
+    "confidence": 0.85
+  },
+  "diagnostic": {
+    "tests": ["test1", "test2"],
+    "priority": "Routine|Urgent|Emergency",
+    "confidence": 0.82
+  },
+  "treatment": {
+    "status": "Appropriate|Over-treatment|Under-treatment|Denied",
+    "reason": "clinical justification",
+    "confidence": 0.88
+  },
+  "claim": {
+    "status": "Approved|Partial|Denied",
+    "approved_amount": 0,
+    "coverage_pct": 80,
+    "reason": "insurance decision rationale",
+    "confidence": 0.91
+  },
+  "fraud": {
+    "risk": "Low|Medium|High",
+    "score": 0.12,
+    "flags": ["any red flags or empty array"],
+    "reason": "fraud assessment rationale"
+  },
+  "summary": "2-3 sentence overall assessment"
+}`;
+
+    updateStep(0, 'Running', 'Analyzing symptoms...', false);
+    updateStep(1, 'Running', 'Generating diagnostic plan...');
+    updateStep(2, 'Running', 'Evaluating treatment...');
+    updateStep(3, 'Running', 'Processing claim...');
+    updateStep(4, 'Running', 'Checking for fraud...');
+
+    const rawText = await callClaude([{role:'user',content:prompt}], '', 1200);
+
+    // Parse JSON — extract from text if needed
+    let result;
+    try {
+      const match = rawText.match(/\{[\s\S]*\}/);
+      result = JSON.parse(match ? match[0] : rawText);
+    } catch(e) {
+      throw new Error('AI returned invalid JSON. Check your connection and try again.');
+    }
+
+    // Mark all steps done
+    [0,1,2,3,4].forEach(i => updateStep(i,'Done','Complete',true));
+    document.getElementById(`agent-step-status-0`).textContent = `${result.symptom.severity} severity — ${result.symptom.condition}`;
+    document.getElementById(`agent-step-status-1`).textContent = `Tests: ${(result.diagnostic.tests||[]).join(', ')}`;
+    document.getElementById(`agent-step-status-2`).textContent = `Treatment: ${result.treatment.status}`;
+    document.getElementById(`agent-step-status-3`).textContent = `Claim: ${result.claim.status} — ₹${(result.claim.approved_amount||0).toLocaleString('en-IN')}`;
+    document.getElementById(`agent-step-status-4`).textContent = `Fraud Risk: ${result.fraud.risk} (${Math.round((result.fraud.score||0)*100)}%)`;
+
+    const sevColor = result.symptom.severity==='Critical'?'#b71c1c':result.symptom.severity==='High'?'#e53935':result.symptom.severity==='Moderate'?'#f57f17':'#2e7d32';
+    const fraudColor = result.fraud.risk==='High'?'var(--red)':result.fraud.risk==='Medium'?'var(--amber)':'var(--green2)';
+    const claimClass = result.claim.status==='Approved'?'approved':result.claim.status==='Denied'?'denied':'partial';
+    const treatClass = result.treatment.status==='Appropriate'?'approved':result.treatment.status==='Denied'?'denied':'partial';
+
+    // Append full results below the steps
+    document.getElementById('agent-results').innerHTML += `
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+        <div class="section-title">📊 Full Analysis</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;border-left:3px solid ${sevColor}">
+            <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px">CONDITION</div>
+            <div style="font-size:14px;font-weight:700;color:${sevColor}">${result.symptom.condition}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${result.symptom.severity} Severity • ${Math.round((result.symptom.confidence||0)*100)}% confidence</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:6px">${result.symptom.detail||''}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px">RECOMMENDED TESTS</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">${(result.diagnostic.tests||[]).map(t=>`<span class="pill teal" style="font-size:11px">${t}</span>`).join('')}</div>
+            <div style="font-size:11px;color:var(--text3)">Priority: <strong>${result.diagnostic.priority}</strong> • ${Math.round((result.diagnostic.confidence||0)*100)}% confidence</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:6px">TREATMENT DECISION</div>
+            <span class="status-badge ${treatClass}">${result.treatment.status}</span>
+            <div style="font-size:12px;color:var(--text2);margin-top:8px">${result.treatment.reason}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">${Math.round((result.treatment.confidence||0)*100)}% confidence</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:6px">CLAIM DECISION</div>
+            <span class="status-badge ${claimClass}">${result.claim.status}</span>
+            <div style="font-size:13px;font-weight:700;color:var(--green2);margin-top:8px">₹${(result.claim.approved_amount||0).toLocaleString('en-IN')} approved (${result.claim.coverage_pct||0}%)</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px">${result.claim.reason}</div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;border-left:3px solid ${fraudColor};margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div>
+              <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px">FRAUD ASSESSMENT</div>
+              <span class="status-badge ${result.fraud.risk==='High'?'denied':result.fraud.risk==='Medium'?'partial':'approved'}">${result.fraud.risk} Risk</span>
+            </div>
+            <div style="flex:1">
+              <div style="height:5px;background:var(--surface3);border-radius:3px;margin:0 10px">
+                <div style="width:${Math.round((result.fraud.score||0)*100)}%;height:5px;background:${fraudColor};border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="font-size:18px;font-weight:700;color:${fraudColor};font-family:'Sora',sans-serif">${Math.round((result.fraud.score||0)*100)}%</div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-top:8px">${result.fraud.reason}</div>
+          ${(result.fraud.flags||[]).length ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">${result.fraud.flags.map(f=>`<span style="background:#fce8e8;color:#b71c1c;font-size:11px;padding:2px 8px;border-radius:12px">⚑ ${f}</span>`).join('')}</div>` : ''}
+        </div>
+        <div style="background:#e8f5e9;border-radius:8px;padding:12px;border-left:3px solid var(--green2)">
+          <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px">AI SUMMARY</div>
+          <div style="font-size:13px;color:var(--text1);line-height:1.6">${result.summary||'Analysis complete.'}</div>
+        </div>
+      </div>`;
+
+    // Render agent breakdown cards
+    document.getElementById('agents-cards').style.display = 'block';
+    const agentData = [
+      {icon:'🫁',label:'Symptom Agent',sub:'Condition identification',val:`${result.symptom.condition}`,detail:`${result.symptom.severity} severity`,conf:result.symptom.confidence,color:'#1e88e5'},
+      {icon:'🔬',label:'Diagnostic Agent',sub:'Test recommendations',val:(result.diagnostic.tests||[]).slice(0,2).join(', '),detail:`${result.diagnostic.priority} priority`,conf:result.diagnostic.confidence,color:'#43a047'},
+      {icon:'💊',label:'Treatment Agent',sub:'Clinical evaluation',val:result.treatment.status,detail:result.treatment.reason.slice(0,60)+'...',conf:result.treatment.confidence,color:'#f9a825'},
+      {icon:'📋',label:'Claim Agent',sub:'Insurance decision',val:`${result.claim.status}: ₹${(result.claim.approved_amount||0).toLocaleString('en-IN')}`,detail:`${result.claim.coverage_pct||0}% coverage`,conf:result.claim.confidence,color:'#e53935'},
+      {icon:'🚨',label:'Fraud Agent',sub:'Anomaly detection',val:`${result.fraud.risk} Risk`,detail:result.fraud.reason.slice(0,60)+'...',conf:result.fraud.score,color:fraudColor.replace('var(--','').replace(')','').replace('red','#e53935').replace('amber','#f9a825').replace('green2','#43a047')},
+    ];
+    document.getElementById('agents-grid').innerHTML = agentData.map(a=>`
+      <div class="agent-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:32px;height:32px;border-radius:8px;background:${a.color}22;display:flex;align-items:center;justify-content:center;font-size:16px">${a.icon}</div>
+          <div><div style="font-size:12px;font-weight:600">${a.label}</div><div style="font-size:10px;color:var(--text3)">${a.sub}</div></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:4px">${a.val}</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">${a.detail}</div>
+        <div style="height:4px;background:var(--surface3);border-radius:2px;margin-bottom:4px">
+          <div style="width:${Math.round((a.conf||0)*100)}%;height:4px;background:${a.color};border-radius:2px"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3)">${Math.round((a.conf||0)*100)}% confidence</div>
+      </div>`).join('');
+
+  } catch(e) {
+    document.getElementById('agent-results').innerHTML += `
+      <div style="margin-top:16px;padding:14px;background:#fce8e8;border-radius:8px;border:1px solid #ef9a9a;color:#b71c1c;font-size:13px">
+        ⚠️ <strong>Error:</strong> ${e.message}<br><br>
+        Make sure:<br>
+        • api.js proxy server is running on port 3000<br>
+        • Your Anthropic API key is set in Settings<br>
+        • Run: <code>node api.js</code> in the terminal
+      </div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '▶ Run All 5 AI Agents';
+}
+
+// ============================================================
+// AI ASSISTANT — CLEAN SINGLE IMPLEMENTATION
+// ============================================================
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  input.disabled = true;
+  document.getElementById('chat-btn').disabled = true;
+
+  addChatMsg(msg, 'user');
+  chatHistory.push({role:'user', content:msg});
+
+  // Thinking indicator
+  const thinking = document.createElement('div');
+  thinking.className = 'chat-msg bot';
+  thinking.innerHTML = '<div class="chat-bubble" style="color:var(--text3);font-style:italic">Thinking...</div>';
+  document.getElementById('chat-box').appendChild(thinking);
+  document.getElementById('chat-box').scrollTop = 99999;
+
+  // Build dataset summary for system prompt
+  const diagCounts = countBy(DATASET,'Diagnosis');
+  const fraudCount = DATASET.filter(r=>r.Fraud_Flag==='Yes').length;
+  const avgClaim = Math.round(DATASET.reduce((a,r)=>a+r.Claim_Amount,0)/DATASET.length);
+  const totalApproved = DATASET.reduce((a,r)=>a+r.Approved_Amount,0);
+  const totalClaimed = DATASET.reduce((a,r)=>a+r.Claim_Amount,0);
+  const approvalRate = Math.round(totalApproved/totalClaimed*100);
+
+  const systemPrompt = `You are MediCore AI, a hospital intelligence assistant. You have full access to a real Kaggle healthcare dataset with ${DATASET.length} patient records.
+
+Dataset Summary:
+- Total patients: ${DATASET.length}
+- Diagnoses breakdown: ${Object.entries(diagCounts).map(([k,v])=>`${k}: ${v}`).join(', ')}
+- Fraud flagged: ${fraudCount} records (${Math.round(fraudCount/DATASET.length*100)}%)
+- Average claim amount: ₹${avgClaim.toLocaleString('en-IN')}
+- Total approved: ₹${(totalApproved/100000).toFixed(1)}L of ₹${(totalClaimed/100000).toFixed(1)}L claimed
+- Approval rate: ${approvalRate}%
+- Procedures: Consultation, Blood Test, Surgery, MRI, X-Ray
+- Age range: 1–90 years
+
+Be concise, professional, and data-driven. Use bullet points when listing. Reference actual numbers from the dataset.`;
+
+  try {
+    const reply = await callClaude(chatHistory, systemPrompt, 800);
+    chatHistory.push({role:'assistant', content:reply});
+    thinking.remove();
+    addChatMsg(reply, 'bot');
+  } catch(e) {
+    thinking.remove();
+    addChatMsg(`⚠️ Could not connect to AI: ${e.message}\n\nMake sure api.js is running (node api.js) and your API key is set in Settings.`, 'bot');
+  }
+
+  input.disabled = false;
+  document.getElementById('chat-btn').disabled = false;
+  input.focus();
+}
+
+function quickChat(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendChat();
+  
+}
+
+function addChatMsg(text, role) {
+  const chatBox = document.getElementById('chat-box');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  // Convert newlines and basic formatting
+  const formatted = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  div.innerHTML = `<div class="chat-bubble">${formatted}</div><div class="chat-meta">${role==='user'?'You':'MediCore AI'} • ${now}</div>`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = 99999;
+}
+
+</script>
+</body>
+</html>
