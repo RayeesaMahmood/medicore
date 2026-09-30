@@ -118,7 +118,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;backgr
       <button onclick="showPage('assistant')">Assistant</button>
     </div>
     <div class="topbar-right">
-      <div class="badge"><span class="dot-live"></span>Live</div>
+      <div class="badge" style="cursor:pointer" onclick="showPage('settings')"><span class="dot-live"></span><span id="provider-badge">AI: checking…</span></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6)" id="topbar-date">City General Hospital</div>
     </div>
   </div>
@@ -382,14 +382,34 @@ body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;backgr
         </div>
         <div class="grid-2">
           <div class="card">
-            <div class="section-title">AI Model Configuration</div>
-            <div class="input-row"><div class="input-label">Gemini API Key</div><div style="font-size:12px;color:var(--text2);padding:8px 0">Set <code>GEMINI_API_KEY</code> in the server's <code>.env</code> file. The key is never stored in the browser.</div></div>
-            <div class="input-row"><div class="input-label">Proxy Server URL (from api.js)</div><input class="inp" id="proxy-url" placeholder="http://localhost:3000"/></div>
-            <div class="input-row"><div class="input-label">Active Model</div>
-              <select class="inp" disabled><option>gemini-2.5-flash (set GEMINI_MODEL on the server)</option></select>
+            <div class="section-title">AI Provider</div>
+            <div class="input-row"><div class="input-label">Which AI runs the agents</div>
+              <select class="inp" id="llm-provider" onchange="providerChanged()">
+                <option value="auto">Auto: Gemini → Ollama → in-browser → rules</option>
+                <option value="webllm">In-browser model (free, no server, no key)</option>
+                <option value="ollama">Ollama on this computer (free, local)</option>
+                <option value="gemini">Gemini via backend (api.js + key)</option>
+                <option value="rules">Rules only (no AI)</option>
+              </select>
+            </div>
+            <div id="cfg-webllm" class="cfg-block">
+              <div class="input-row"><div class="input-label">In-browser model</div><select class="inp" id="webllm-model"></select></div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Runs on this device's GPU through WebGPU (desktop Chrome or Edge). Downloaded once, then cached by the browser. Nothing leaves this device.</div>
+              <button class="btn btn-teal" style="width:100%" onclick="loadBrowserModel()" id="webllm-btn">⬇ Load in-browser model</button>
+              <div style="height:6px;background:var(--surface2);border-radius:4px;margin-top:8px;overflow:hidden"><div id="webllm-bar" style="height:100%;width:0;background:var(--teal);transition:width .2s"></div></div>
+              <div id="webllm-text" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+            </div>
+            <div id="cfg-ollama" class="cfg-block">
+              <div class="input-row"><div class="input-label">Ollama URL</div><input class="inp" id="ollama-url" placeholder="http://localhost:11434"/></div>
+              <div class="input-row"><div class="input-label">Ollama model</div><input class="inp" id="ollama-model" placeholder="qwen2.5:3b" list="ollama-models"/><datalist id="ollama-models"></datalist></div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Install from ollama.com, run <code>ollama pull qwen2.5:3b</code>. To use it from the hosted site, start Ollama with <code>OLLAMA_ORIGINS=*</code> (see README).</div>
+            </div>
+            <div id="cfg-gemini" class="cfg-block">
+              <div class="input-row"><div class="input-label">Backend URL (api.js)</div><input class="inp" id="proxy-url" placeholder="http://localhost:3000"/></div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Set <code>GEMINI_API_KEY</code> in the server's <code>.env</code>. The key is never stored in the browser.</div>
             </div>
             <div id="api-status" style="padding:10px;background:#fff8e1;border-radius:8px;font-size:12px;color:#5d4037;margin-top:8px">
-              ⚠ Enter the backend URL above, save, then test the connection.
+              Choose a provider, save, then test.
             </div>
             <button class="btn btn-teal" style="margin-top:10px;width:100%" onclick="testConnection()">🔌 Test Connection</button>
           </div>
@@ -417,18 +437,68 @@ body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;backgr
 </div>
 
 <script src="data.js"></script>
+<script src="llm-providers.js"></script>
 <script src="agents.js"></script>
 <script>
 // ============================================================
 // CONFIG
 // ============================================================
-function getProxyUrl() {
-  try { return localStorage.getItem('medicore_proxy') || 'http://localhost:3000'; } catch (e) { return 'http://localhost:3000'; }
+function getProxyUrl() { return MediCoreLLM.getSettings().backendUrl; }
+
+function fillSettingsForm() {
+  const st = MediCoreLLM.getSettings();
+  document.getElementById('llm-provider').value = st.provider;
+  document.getElementById('proxy-url').value = st.backendUrl;
+  document.getElementById('ollama-url').value = st.ollamaUrl;
+  document.getElementById('ollama-model').value = st.ollamaModel;
+  document.getElementById('webllm-model').innerHTML = Object.entries(MediCoreLLM.WEBLLM_MODELS)
+    .map(([id, label]) => `<option value="${id}" ${id === st.webllmModel ? 'selected' : ''}>${label}</option>`).join('');
+  providerChanged();
+}
+function providerChanged() {
+  const p = document.getElementById('llm-provider').value;
+  document.getElementById('cfg-webllm').style.display = (p === 'webllm' || p === 'auto') ? 'block' : 'none';
+  document.getElementById('cfg-ollama').style.display = (p === 'ollama' || p === 'auto') ? 'block' : 'none';
+  document.getElementById('cfg-gemini').style.display = (p === 'gemini' || p === 'auto') ? 'block' : 'none';
 }
 function saveSettings() {
-  const proxy = document.getElementById('proxy-url').value.trim();
-  try { if (proxy) localStorage.setItem('medicore_proxy', proxy); } catch (e) { /* storage blocked */ }
-  showApiStatus('✓ Configuration saved!', 'success');
+  MediCoreLLM.saveSettings({
+    provider: document.getElementById('llm-provider').value,
+    backendUrl: document.getElementById('proxy-url').value.trim() || MediCoreLLM.DEFAULTS.backendUrl,
+    ollamaUrl: document.getElementById('ollama-url').value.trim() || MediCoreLLM.DEFAULTS.ollamaUrl,
+    ollamaModel: document.getElementById('ollama-model').value.trim() || MediCoreLLM.DEFAULTS.ollamaModel,
+    webllmModel: document.getElementById('webllm-model').value,
+  });
+  showApiStatus('✓ Configuration saved.', 'success');
+  refreshProviderBadge();
+}
+function webllmProgress(p, text) {
+  const bar = document.getElementById('webllm-bar'), t = document.getElementById('webllm-text');
+  if (bar) bar.style.width = Math.round(p * 100) + '%';
+  if (t) t.textContent = text;
+}
+async function loadBrowserModel() {
+  saveSettings();
+  const btn = document.getElementById('webllm-btn');
+  btn.disabled = true; btn.textContent = '⏳ Loading model…';
+  try {
+    await MediCoreLLM.loadWebLLM(MediCoreLLM.getSettings().webllmModel, webllmProgress);
+    webllmProgress(1, 'Model ready. It stays loaded while this tab is open, and is cached for next time.');
+    showApiStatus('✓ In-browser model loaded. The agents will use it.', 'success');
+  } catch (e) {
+    showApiStatus('✗ Could not load the in-browser model: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = MediCoreLLM.isWebLLMLoaded() ? '✓ Model loaded' : '⬇ Load in-browser model';
+    refreshProviderBadge();
+  }
+}
+async function refreshProviderBadge() {
+  const r = await MediCoreLLM.resolve();
+  const el = document.getElementById('provider-badge');
+  if (el) el.textContent = r.id === 'rules' ? 'AI: rules only' : 'AI: ' + r.label;
+  const ol = await MediCoreLLM.ollamaStatus();
+  document.getElementById('ollama-models').innerHTML = ol.models.map(m => `<option value="${m}">`).join('');
+  return r;
 }
 function showApiStatus(msg, type) {
   const el = document.getElementById('api-status');
@@ -443,42 +513,25 @@ function showApiStatus(msg, type) {
 }
 
 async function testConnection() {
-  showApiStatus('🔌 Testing connection...', 'warn');
+  saveSettings();
+  showApiStatus('🔌 Testing…', 'warn');
+  const r = await MediCoreLLM.resolve();
+  if (r.id === 'rules') { showApiStatus('⚠ No AI provider available: ' + r.detail, 'warn'); return; }
   try {
-    const resp = await callClaude([{role:'user',content:'Say "Connection OK" and nothing else.'}], 'You are a test assistant.');
-    showApiStatus('✓ Connection successful! Gemini AI is ready.', 'success');
-  } catch(e) {
-    showApiStatus('✗ Connection failed: ' + e.message, 'error');
+    const t0 = performance.now();
+    const text = await MediCoreLLM.chat([{ role: 'user', content: 'Return JSON {"status":"ok"}' }], { provider: r.id, json: true, maxTokens: 30, onProgress: webllmProgress });
+    showApiStatus(`✓ ${r.label} is working (${r.detail}) · replied in ${Math.round(performance.now() - t0)} ms: ${text.slice(0, 60)}`, 'success');
+  } catch (e) {
+    showApiStatus(`✗ ${r.label} failed: ${e.message}`, 'error');
   }
 }
 
 // ============================================================
 // CORE API CALL — single clean function used everywhere
 // ============================================================
-async function callClaude(messages, systemPrompt = '', maxTokens = 1200, json = false) {
-  const proxy = getProxyUrl();
-  const body = {
-    model: 'gemini-2.5-flash',
-    max_tokens: maxTokens,
-    messages: messages
-  };
-  if (systemPrompt) body.system = systemPrompt;
-  if (json) body.json = true;
-
-  const resp = await fetch(`${proxy}/api/llm`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body)
-  });
-
-  if (!resp.ok) {
-    const err = await resp.text();
-    throw new Error(`API error ${resp.status}: ${err}`);
-  }
-
-  const data = await resp.json();
-  if (data.error) throw new Error(data.error.message || 'API error');
-  return data.content.map(c => c.text || '').join('');
+// Kept under its old name: every AI call in the app goes through the selected provider.
+async function callClaude(messages, systemPrompt = '', maxTokens = 1200, json = false, provider) {
+  return MediCoreLLM.chat(messages, { system: systemPrompt, maxTokens, json, provider, onProgress: webllmProgress });
 }
 
 // ============================================================
@@ -519,7 +572,8 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dash-date').textContent = ds + ' — Real-time hospital intelligence';
 
   // Load saved settings
-  document.getElementById('proxy-url').value = getProxyUrl();
+  fillSettingsForm();
+  refreshProviderBadge();
   renderStats();
   renderReview();
 
@@ -768,15 +822,9 @@ function diagnosisChanged() {
 const REVIEW = { items: {}, log: [], auto: 0, lastTriage: null };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-async function backendReady() {
-  try {
-    const r = await fetch(`${getProxyUrl()}/api/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(2500) : undefined });
-    const d = await r.json();
-    return !!(r.ok && d.keyConfigured);
-  } catch (e) { return false; }
-}
+let ACTIVE_PROVIDER = null;
 async function llmJSON(prompt) {
-  return callClaude([{ role: 'user', content: prompt }], '', 500, true);
+  return callClaude([{ role: 'user', content: prompt }], '', 500, true, ACTIVE_PROVIDER);
 }
 
 function currentClaim() {
@@ -816,12 +864,15 @@ async function runAgents() {
 
   const btn = document.getElementById('run-btn');
   btn.disabled = true; btn.textContent = '⏳ Running pipeline…';
-  const useLLM = await backendReady();
+  const prov = await MediCoreLLM.resolve();
+  const useLLM = prov.id !== 'rules';
+  ACTIVE_PROVIDER = useLLM ? prov.id : null;
   const steps = useLLM ? ['rule', 'clinical', 'treatment', 'claim', 'fraud', 'escalation'] : ['rule', 'escalation'];
 
   const box = document.getElementById('agent-results');
   box.innerHTML = `<div class="section-title">Agent Output — ${esc(claim.Patient_Name)}</div>
-    ${useLLM ? '' : `<div class="alert-bar" style="background:#fff8e1;border-color:#ffe082;color:#5d4037">Backend not reachable or GEMINI_API_KEY not set, so this run uses rule checks only. See API Configuration.</div>`}
+    ${useLLM ? `<div class="alert-bar" style="background:#e3f2fd;border-color:#90caf9;color:#1565c0">AI provider: ${esc(prov.label)} (${esc(prov.detail)})${prov.id === 'webllm' && !MediCoreLLM.isWebLLMLoaded() ? ' · loading model, first run downloads it once' : ''}</div>`
+      : `<div class="alert-bar" style="background:#fff8e1;border-color:#ffe082;color:#5d4037">Rules only: ${esc(prov.detail)}. <a href="#" onclick="showPage('settings');return false">Choose a free AI provider →</a></div>`}
     <div style="padding:8px 0">${steps.map(n => `
       <div id="step-${n}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border)">
         <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text1)">${STEP_LABELS[n]}</div>

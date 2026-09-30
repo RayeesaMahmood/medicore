@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-30T16:41:15.907Z",
+  "generatedAt": "2026-09-30T16:47:49.957Z",
   "source": "data.js (69-record sample: all 51 fraud + 18 clean)",
   "mode": "rules only",
   "config": {

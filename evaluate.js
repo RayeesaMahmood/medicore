@@ -10,8 +10,10 @@
  * Usage:
  *   node eval/evaluate.js                         rules-only, on the bundled 69-record sample
  *   node eval/evaluate.js --csv data/full.csv     rules-only, on the full dataset
- *   node eval/evaluate.js --llm --api http://localhost:3000   agents + rules (needs the backend running
- *                                                 with GEMINI_API_KEY); responses are cached in eval/llm_cache.json
+ *   node eval/evaluate.js --llm --api http://localhost:3000   agents + rules via the Gemini backend
+ *   node eval/evaluate.js --ollama qwen2.5:3b     agents + rules via a local Ollama model (free, no key)
+ *                                                 (--ollama-url to change http://localhost:11434)
+ *   LLM responses are cached in eval/llm_cache.json, so re-runs and threshold sweeps are free.
  */
 const fs = require('fs');
 const path = require('path');
@@ -48,21 +50,37 @@ function loadDataset() {
 }
 
 // ------------------------------------------------------------------ LLM (optional)
-function makeLLM(apiBase) {
+function makeLLM({ provider, apiBase, ollamaUrl, ollamaModel }) {
   const cachePath = path.join(__dirname, 'llm_cache.json');
   const cache = fs.existsSync(cachePath) ? JSON.parse(fs.readFileSync(cachePath, 'utf8')) : {};
+  const tag = provider === 'ollama' ? `ollama:${ollamaModel}` : 'gemini';
   const call = async (prompt) => {
-    if (cache[prompt]) return cache[prompt];
-    const r = await fetch(`${apiBase}/api/llm`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], json: true, max_tokens: 400 }),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || `HTTP ${r.status}`);
-    cache[prompt] = d.content.map(c => c.text).join('');
+    const key = `${tag}\n${prompt}`;
+    if (cache[key]) return cache[key];
+    let text;
+    if (provider === 'ollama') {
+      const r = await fetch(`${ollamaUrl}/api/chat`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: ollamaModel, stream: false, format: 'json',
+          messages: [{ role: 'user', content: prompt }], options: { temperature: 0.2, num_predict: 400 } }),
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || `Ollama HTTP ${r.status}`);
+      text = d.message.content;
+    } else {
+      const r = await fetch(`${apiBase}/api/llm`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], json: true, max_tokens: 400 }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error?.message || `HTTP ${r.status}`);
+      text = d.content.map(c => c.text).join('');
+    }
+    cache[key] = text;
     fs.writeFileSync(cachePath, JSON.stringify(cache, null, 1));
-    return cache[prompt];
+    return text;
   };
+  call.tag = tag;
   return call;
 }
 
@@ -96,8 +114,11 @@ async function evaluate(rows, config, callLLM) {
 
 (async () => {
   const { rows, source } = loadDataset();
-  const callLLM = flag('--llm') ? makeLLM(opt('--api', 'http://localhost:3000')) : null;
-  const mode = callLLM ? 'agents + rules' : 'rules only';
+  const callLLM = flag('--ollama')
+    ? makeLLM({ provider: 'ollama', ollamaUrl: opt('--ollama-url', 'http://localhost:11434'), ollamaModel: opt('--ollama', 'qwen2.5:3b') })
+    : flag('--llm') ? makeLLM({ provider: 'gemini', apiBase: opt('--api', 'http://localhost:3000') }) : null;
+  const mode = callLLM ? `agents + rules (${callLLM.tag})` : 'rules only';
+  if (callLLM) console.error(`Running ${rows.length} claims x 4 agents with ${callLLM.tag}; first run may take a while…`);
 
   const base = await evaluate(rows, A.DEFAULT_CONFIG, callLLM);
   const main = score(base);

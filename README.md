@@ -24,7 +24,36 @@ Each LLM agent is a separate call with its own prompt and a validated JSON schem
 
 Rule signals: procedure not expected for the diagnosis, claim more than 2× the procedure median, stay more than 2.5× the diagnosis median, approved amount above claimed amount, and admission/discharge dates that do not match the stay length.
 
-Without a backend or API key, the app runs **rules only** (steps 1 and 6), so the public demo still works.
+The AI agents can run on a free in-browser model, a free local Ollama model, or Gemini (see below). With none available, the app runs **rules only** (steps 1 and 6).
+
+## Free AI providers (no key, no expiry)
+
+Open **API Configuration** and pick where the agents' AI runs. `Auto` uses the first one available.
+
+| Provider | Cost | Where it runs | Best for |
+|---|---|---|---|
+| **In-browser model** (WebLLM, Qwen2.5 0.5B / 1.5B / 3B) | free forever | the visitor's own GPU, via WebGPU | the public demo: anyone can run the real agents, no server, no key, data never leaves the device |
+| **Ollama** (e.g. `qwen2.5:3b`, `llama3.2:3b`) | free forever | your own computer | development and running the evaluation |
+| **Gemini** via `api.js` | free tier / paid | Google, through your backend | strongest answers |
+| **Rules only** | free | anywhere | fallback when no AI is available |
+
+**In-browser model.** Needs desktop Chrome or Edge (WebGPU). Click *Load in-browser model*; the first load downloads roughly 1–2.5 GB depending on the model, then the browser caches it.
+
+**Ollama.**
+```bash
+# install from https://ollama.com, then
+ollama pull qwen2.5:3b
+# to let the hosted site (e.g. medicore-psi.vercel.app) call your local Ollama, allow its origin:
+#   Windows (PowerShell):  $env:OLLAMA_ORIGINS="*"; ollama serve
+#   macOS / Linux:         OLLAMA_ORIGINS="*" ollama serve
+```
+Chrome may ask to allow the site to access devices on your local network; allow it. Opening `index.html` from your own machine works without this step.
+
+**Evaluation with Ollama (free):**
+```bash
+npm run eval -- --ollama qwen2.5:3b
+```
+LLM answers are cached in `eval/llm_cache.json`, so re-runs and threshold sweeps cost nothing.
 
 ## Human review queue
 
@@ -35,7 +64,8 @@ The **Human Review** page lists escalated claims, sorted by priority, with the r
 ```bash
 npm run eval                                   # rules only, bundled 69-record sample
 npm run eval -- --csv path/to/full_dataset.csv # rules only, full dataset
-npm run eval -- --llm --api http://localhost:3000  # agents + rules (backend must be running)
+npm run eval -- --ollama qwen2.5:3b            # agents + rules with a free local model
+npm run eval -- --llm --api http://localhost:3000  # agents + rules via the Gemini backend
 ```
 
 Results are written to `eval/results.md` and `eval/results.json`. Reference statistics are computed leave-one-out, so a claim never influences its own check. Current result on the bundled sample (rules only):
@@ -65,6 +95,7 @@ The API key is read only by the server (`api.js`) from `.env` and is never sent 
 
 - `agents.js`: pipeline, rule agent, LLM agents, escalation control (browser + Node)
 - `data.js`: bundled dataset sample
+- `llm-providers.js`: AI provider switch (in-browser WebLLM, Ollama, Gemini backend, rules only)
 - `api.js`: Express proxy to Gemini (`/api/llm`, `/api/health`)
 - `index.html`: dashboard, agent pipeline, human review queue, claims, analytics, assistant
 - `eval/evaluate.js`: escalation evaluation and threshold sweep
