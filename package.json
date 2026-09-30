@@ -1,15 +1,17 @@
 {
-  "name": "hospital-ready-to-sell-project",
-  "version": "1.0.0",
-  "description": "",
+  "name": "medicore",
+  "version": "2.0.0",
+  "description": "Multi-agent clinical and insurance claims pipeline with a human-escalation layer",
   "main": "api.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node api.js",
+    "test": "node --test test/*.test.js",
+    "eval": "node eval/evaluate.js"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Rayeesa Mahmood",
   "license": "ISC",
   "type": "commonjs",
+  "engines": { "node": ">=18" },
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1"
