@@ -169,10 +169,18 @@ Assess fraud risk independently. Return ONLY JSON:
   };
   const LLM_ORDER = ['clinical', 'treatment', 'claim', 'fraud'];
 
+  // Shared instructions so confidence values mean something and can be compared across agents.
+  const CALIBRATION = `
+Rules for your answer:
+- Use only the facts given; do not invent tests, history or prices.
+- "confidence" is your probability (0.0-1.0) that your main judgement is correct. Be calibrated:
+  use 0.9+ only when the facts clearly support it, 0.5-0.7 when information is missing or ambiguous.
+- Keep text fields to one short sentence. Output the JSON object only.`;
+
   async function runLLMAgent(name, claim, prev, callLLM) {
     const def = AGENTS[name];
     try {
-      const text = await callLLM(def.prompt(claim, prev));
+      const text = await callLLM(def.prompt(claim, prev) + CALIBRATION);
       return { agent: name, ok: true, ...def.validate(extractJSON(text)) };
     } catch (e) {
       return { agent: name, ok: false, error: e.message, confidence: 0 };

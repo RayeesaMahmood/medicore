@@ -2,9 +2,9 @@
   "name": "medicore",
   "version": "2.0.0",
   "description": "Multi-agent clinical and insurance claims pipeline with a human-escalation layer",
-  "main": "api.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node api.js",
+    "start": "node server.js",
     "test": "node --test test/*.test.js",
     "eval": "node eval/evaluate.js"
   },

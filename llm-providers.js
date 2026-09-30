@@ -1,6 +1,6 @@
 /* MediCore LLM providers (browser).
  *
- *   gemini : the api.js backend, which calls Gemini with a server-side key
+ *   gemini : the MediCore backend (/api on Vercel, or server.js locally): Gemini with Groq fallback, keys server-side
  *   ollama : a local Ollama server (free, runs on your own machine) - default http://localhost:11434
  *   webllm : a small open model running inside the visitor's browser via WebGPU (free, no server, no key)
  *   rules  : no LLM; the pipeline runs rule checks only
@@ -16,12 +16,12 @@
   };
   const DEFAULTS = {
     provider: 'auto',
-    backendUrl: 'http://localhost:3000',
+    backendUrl: (typeof location !== 'undefined' && /^https?:/.test(location.protocol)) ? '' : 'http://localhost:3000',
     ollamaUrl: 'http://localhost:11434',
     ollamaModel: 'qwen2.5:3b',
     webllmModel: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC',
   };
-  const LABELS = { gemini: 'Gemini (backend)', ollama: 'Ollama (local)', webllm: 'In-browser model (WebLLM)', rules: 'Rules only' };
+  const LABELS = { gemini: 'Cloud AI (Gemini / Groq)', ollama: 'Ollama (local)', webllm: 'In-browser model (WebLLM)', rules: 'Rules only' };
 
   let webllm = { engine: null, model: null, loading: null };
 
@@ -39,12 +39,20 @@
   const timeout = (ms) => (AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined);
 
   // ---------------------------------------------------------------- status checks
+  // The backend can be this site itself (Vercel /api functions, or server.js) or a URL set in settings.
+  let backendBase = null;
   async function geminiStatus(s = getSettings()) {
-    try {
-      const r = await fetch(`${s.backendUrl}/api/health`, { signal: timeout(2500) });
-      const d = await r.json();
-      return { ok: !!(r.ok && d.keyConfigured), detail: d.keyConfigured ? `model ${d.model}` : 'backend running but GEMINI_API_KEY not set' };
-    } catch (e) { return { ok: false, detail: 'backend not reachable' }; }
+    const bases = [...new Set([(typeof location !== 'undefined' && /^https?:/.test(location.protocol)) ? '' : null, s.backendUrl].filter(b => b !== null))];
+    let last = 'backend not reachable';
+    for (const base of bases) {
+      try {
+        const r = await fetch(`${base}/api/health`, { signal: timeout(3000) });
+        const d = await r.json();
+        if (r.ok && d.keyConfigured) { backendBase = base; return { ok: true, detail: d.model }; }
+        if (r.ok) last = 'backend running but no GEMINI_API_KEY / GROQ_API_KEY set';
+      } catch (e) { /* try next */ }
+    }
+    return { ok: false, detail: last };
   }
   async function ollamaStatus(s = getSettings()) {
     try {
@@ -75,7 +83,8 @@
 
   // ---------------------------------------------------------------- calls
   async function callGemini(s, messages, o) {
-    const r = await fetch(`${s.backendUrl}/api/llm`, {
+    if (backendBase === null) await geminiStatus(s);
+    const r = await fetch(`${backendBase !== null ? backendBase : s.backendUrl}/api/llm`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages, system: o.system || undefined, json: !!o.json, max_tokens: o.maxTokens }),
     });

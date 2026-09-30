@@ -34,7 +34,7 @@ Open **API Configuration** and pick where the agents' AI runs. `Auto` uses the f
 |---|---|---|---|
 | **In-browser model** (WebLLM, Qwen2.5 0.5B / 1.5B / 3B) | free forever | the visitor's own GPU, via WebGPU | the public demo: anyone can run the real agents, no server, no key, data never leaves the device |
 | **Ollama** (e.g. `qwen2.5:3b`, `llama3.2:3b`) | free forever | your own computer | development and running the evaluation |
-| **Gemini** via `api.js` | free tier / paid | Google, through your backend | strongest answers |
+| **Cloud AI**: Gemini 2.5 Flash, falls back to Groq Llama 3.3 70B | free tiers | Vercel `/api` functions (or `server.js` locally) | most accurate answers, works for every visitor |
 | **Rules only** | free | anywhere | fallback when no AI is available |
 
 **In-browser model.** Needs desktop Chrome or Edge (WebGPU). Click *Load in-browser model*; the first load downloads roughly 1–2.5 GB depending on the model, then the browser caches it.
@@ -81,22 +81,29 @@ Results are written to `eval/results.md` and `eval/results.json`. Reference stat
 
 ## Run it
 
+### On Vercel (the live site)
+1. Get a free key: Gemini at https://aistudio.google.com/apikey and, as a fallback, Groq at https://console.groq.com/keys.
+2. In Vercel: **Project → Settings → Environment Variables**, add `GEMINI_API_KEY` and `GROQ_API_KEY` (and optionally `ALLOWED_ORIGINS=https://medicore-psi.vercel.app`).
+3. **Deployments → ⋯ → Redeploy**. The `api/` folder becomes serverless functions, and the top bar shows *AI: Cloud AI (Gemini / Groq)*.
+
+The functions accept only short prompts, cap output length, limit each visitor to 40 requests a minute, and (with `ALLOWED_ORIGINS`) refuse calls from other sites, so your free quota cannot be used elsewhere.
+
+### Locally
 ```bash
 npm install
-cp .env.example .env        # then put your Gemini key in .env
-npm start                   # backend on http://localhost:3000
-# open index.html (or serve the folder) and set the backend URL under API Configuration
-npm test                    # 11 unit tests: rules, escalation triggers, fail-safe, never-auto-deny
+cp .env.example .env        # add GEMINI_API_KEY and/or GROQ_API_KEY
+npm start                   # app + API on http://localhost:3000
+npm test                    # unit tests
 ```
-
-The API key is read only by the server (`api.js`) from `.env` and is never sent to the browser.
 
 ## Files
 
 - `agents.js`: pipeline, rule agent, LLM agents, escalation control (browser + Node)
 - `data.js`: bundled dataset sample
 - `llm-providers.js`: AI provider switch (in-browser WebLLM, Ollama, Gemini backend, rules only)
-- `api.js`: Express proxy to Gemini (`/api/llm`, `/api/health`)
+- `lib/llm.js`: server-side AI calls (Gemini, Groq fallback), limits and rate limiting
+- `api/llm.js`, `api/health.js`: Vercel serverless functions
+- `server.js`: local server (`npm start`) with the same `/api` routes, also serves the app
 - `index.html`: dashboard, agent pipeline, human review queue, claims, analytics, assistant
 - `eval/evaluate.js`: escalation evaluation and threshold sweep
 - `test/agents.test.js`: unit tests

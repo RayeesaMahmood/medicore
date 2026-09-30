@@ -385,10 +385,10 @@ body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;backgr
             <div class="section-title">AI Provider</div>
             <div class="input-row"><div class="input-label">Which AI runs the agents</div>
               <select class="inp" id="llm-provider" onchange="providerChanged()">
-                <option value="auto">Auto: Gemini → Ollama → in-browser → rules</option>
+                <option value="auto">Auto: cloud AI → Ollama → in-browser → rules</option>
+                <option value="gemini">Cloud AI: Gemini 2.5 Flash, Groq Llama 3.3 70B fallback (most accurate)</option>
                 <option value="webllm">In-browser model (free, no server, no key)</option>
                 <option value="ollama">Ollama on this computer (free, local)</option>
-                <option value="gemini">Gemini via backend (api.js + key)</option>
                 <option value="rules">Rules only (no AI)</option>
               </select>
             </div>
@@ -405,8 +405,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;backgr
               <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Install from ollama.com, run <code>ollama pull qwen2.5:3b</code>. To use it from the hosted site, start Ollama with <code>OLLAMA_ORIGINS=*</code> (see README).</div>
             </div>
             <div id="cfg-gemini" class="cfg-block">
-              <div class="input-row"><div class="input-label">Backend URL (api.js)</div><input class="inp" id="proxy-url" placeholder="http://localhost:3000"/></div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Set <code>GEMINI_API_KEY</code> in the server's <code>.env</code>. The key is never stored in the browser.</div>
+              <div class="input-row"><div class="input-label">Backend URL (leave empty to use this site's /api)</div><input class="inp" id="proxy-url" placeholder="same site"/></div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Keys are set on the server: in Vercel → Settings → Environment Variables (<code>GEMINI_API_KEY</code>, <code>GROQ_API_KEY</code>), or in <code>.env</code> locally. They are never stored in the browser.</div>
             </div>
             <div id="api-status" style="padding:10px;background:#fff8e1;border-radius:8px;font-size:12px;color:#5d4037;margin-top:8px">
               Choose a provider, save, then test.
@@ -426,7 +426,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text1);min-height:100vh;backgr
               <div>✅ <strong>Approval Rate:</strong> <span data-stat="approvalRate">–</span></div>
             </div>
             <div style="margin-top:14px;padding:10px;background:#e3f2fd;border-radius:8px;font-size:12px;color:#1565c0">
-              ℹ api.js runs a local proxy server on port 3000. Make sure it's running before using AI features. The API key stays on the server.
+              ℹ On Vercel the AI runs in this site's /api functions. Locally, run <code>npm start</code> and open http://localhost:3000. The API key stays on the server.
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ function providerChanged() {
 function saveSettings() {
   MediCoreLLM.saveSettings({
     provider: document.getElementById('llm-provider').value,
-    backendUrl: document.getElementById('proxy-url').value.trim() || MediCoreLLM.DEFAULTS.backendUrl,
+    backendUrl: document.getElementById('proxy-url').value.trim(),
     ollamaUrl: document.getElementById('ollama-url').value.trim() || MediCoreLLM.DEFAULTS.ollamaUrl,
     ollamaModel: document.getElementById('ollama-model').value.trim() || MediCoreLLM.DEFAULTS.ollamaModel,
     webllmModel: document.getElementById('webllm-model').value,
@@ -1058,7 +1058,7 @@ Be concise, professional, and data-driven. Use bullet points when listing. Refer
     addChatMsg(reply, 'bot');
   } catch(e) {
     thinking.remove();
-    addChatMsg(`⚠️ Could not connect to AI: ${e.message}\n\nMake sure api.js is running (node api.js) and your API key is set in Settings.`, 'bot');
+    addChatMsg(`⚠️ Could not connect to AI: ${e.message}\n\nCheck API Configuration: set a cloud AI key on the server, start Ollama, or load the in-browser model. Your API key is set in Settings.`, 'bot');
   }
 
   input.disabled = false;

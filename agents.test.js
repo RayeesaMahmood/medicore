@@ -90,7 +90,7 @@ test('extractJSON handles fenced and surrounded JSON', () => {
   assert.throws(() => A.extractJSON('no json here'));
 });
 
-test('backend has no hard-coded API key', () => {
-  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'api.js'), 'utf8');
+test('server code has no hard-coded API key', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'server.js'), 'utf8');
   assert.ok(!/AIza[0-9A-Za-z_-]{20,}/.test(src));
 });
