@@ -6,7 +6,6 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
 // Put your NEW Gemini API key here
-const GEMINI_API_KEY = "AIzaSyDL4iIrhz-YhGOg6fmzlkHHBa28aivHbqg";
 
 app.get("/", (req, res) => {
   res.send("Gemini backend is running on http://localhost:3000");
